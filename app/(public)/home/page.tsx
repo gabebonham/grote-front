@@ -24,11 +24,11 @@ import {
 import Link from 'next/link'
 export default function HomePage() {
   return (
-    <section className="pt-17">
-      <div className="w-full flex items-center bg-lightgray/70 justify-around py-18">
-        <div className=" w-96 space-y-4">
+    <section className="pt-17 ">
+      <div className="w-full flex items-center bg-lightgray/70 justify-around py-18  max-[400px]:flex-col-reverse ">
+        <div className=" w-96 space-y-4 max-[400px]:w-full max-[400px]:px-4">
           <div className="space-y-3">
-            <h1 className="text-6xl/18 font-extrabold text-black">
+            <h1 className="text-6xl/18 font-extrabold text-black max-[400px]:text-5xl/18 max-[400px]:pt-4">
               Engenheiro de <span className="text-mainblue">Software</span>
             </h1>
             <h4 className="text-xl/8 text-lightgraytext">
@@ -37,7 +37,7 @@ export default function HomePage() {
               jogos.
             </h4>
           </div>
-          <div className="flex items-center gap-x-6">
+          <div className="flex min-[400px]:items-center gap-x-6 max-[400px]:flex-col max-[400px]:gap-y-4">
             <Button className="bg-mainblue text-white hover:bg-mainblue/60 px-10 rounded-sm cursor-pointer">
               <span className="flex items-center gap-x-2">
                 <ArrowDownToLine />
@@ -51,7 +51,7 @@ export default function HomePage() {
               </span>
             </Button>
           </div>
-          <div className="flex items-center gap-x-8 px-2">
+          <div className="flex items-center gap-x-8 px-2 max-[400px]:justify-center max-[400px]:pt-4">
             <Link href={'https://github.com/gabebonham'}>
               <svg
                 className="size-6 hover:text-lightgray transition-all"
@@ -89,7 +89,7 @@ export default function HomePage() {
           </div>
         </div>
         <div>
-          <Card className="rounded-full size-86 overflow-hidden p-0 m-0 shadow-2xl border-4">
+          <Card className="rounded-full size-86 overflow-hidden p-0 m-0 shadow-2xl border-4 max-[400px]:size-64">
             <Image alt="self-presentation" src={me} className="w-full" />
           </Card>
         </div>

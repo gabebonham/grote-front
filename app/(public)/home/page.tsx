@@ -19,10 +19,191 @@ import {
   Database,
   ExternalLink,
   Mail,
+  Router,
   Server,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { downloadCV } from '../_lib/actions'
 export default function HomePage() {
+  const router = useRouter()
+  const historic = [
+    {
+      id: '1',
+      place: 'Panvel',
+      role: 'Backend Spring Boot Developer',
+      location: 'Eldorado Do Sul - RS',
+      description: `Desenvolvimento e manutenção de sistemas críticos usando Java Spring Bootf1
+Construção de integrações com sistemas internos usando REST APIsf1
+Uso extenso de Banco de Dados (Oracle) e controle de versionamento com Gitf1
+Colaboração com times ágeis (Scrum) e cultura DevOps`,
+      status: '2 anos',
+    },
+    {
+      id: '2',
+      place: 'Desenvolvedor Fullstack Autonomo',
+      role: 'Fullstack Developer',
+      location: 'Remoto',
+      description: `Trabalhando como desenvolvedor independente, criando soluções Desktop, Web, Bots, etc...f1
+Soluções customizadas para necessidade de cada clientef1
+Trabalhando com MongoDB/PostgreSQL como preferencia para bancos de dados f1
+Participando nas fases dos projetos: juntando requerimentos, desenvolvimento, testando, e deployment`,
+      status: 'Atualmente',
+    },
+    {
+      id: '3',
+      place: 'Berry Companys',
+      role: 'Tech Lead',
+      location: 'Remoto',
+      description: `Administrando equipesf1
+Desenvolvendo sistemas e mantendo eles, Frontend, Backend, Desktop, Bots, etc...f1
+Mantendo Banco de Dadosf1
+Cuidado da parte de DevOps`,
+      status: 'Atualmente',
+    },
+  ]
+  const backBadges = [
+    'Spring Boot',
+    'Java',
+    'Node',
+    'API REST',
+    'MVC',
+    'Micro Services',
+    'Gradle',
+    'Python',
+    '.NET',
+  ]
+  const frontBadges = [
+    'Next js',
+    'Type Script',
+    'Axios',
+    'Java Script',
+    'React Native',
+    'Tailwind',
+    'HTML',
+    'CSS',
+  ]
+  const dbBadges = ['SQL', 'NoSQL', 'MongoDB', 'MySQL', 'Postgres', 'Oracle']
+  const devopsBadges = ['Docker', 'CI/CD', 'Deploy VPS', 'Vercel', 'Git']
+  const projs = [
+    {
+      id: '1',
+      name: 'Berry Companys Landing Page',
+      description:
+        'A Landing Page de uma empresa focada em soluções de sistemas, que presto serviços regularmente.',
+      img: '/imgs/berry.png',
+      tech: [
+        'Next js',
+        'Vercel',
+        'Axios',
+        'HTML',
+        'CSS',
+        'Type Script',
+        'Java',
+        'Spring Boot',
+      ],
+      status: 'Finalizado',
+      link: 'https://berrycompanys.com',
+    },
+    {
+      id: '2',
+      name: 'Site Pessoal V2',
+      description: 'A segunda versão do meu web site pessoal.',
+      img: '/imgs/v2.png',
+      tech: [
+        'Next js',
+        'Vercel',
+        'Axios',
+        'HTML',
+        'CSS',
+        'Type Script',
+        'Shadcn',
+      ],
+      status: 'Finalizado',
+      githubLink: 'https://github.com/gabebonham/grote-website-frontend',
+      link: 'https://grote-website-frontend.vercel.app/home',
+    },
+    {
+      id: '3',
+      name: 'Site de Eventos',
+      description: 'Um Remake de site de eventos.',
+      img: '/imgs/luma.png',
+      tech: ['HTML', 'CSS'],
+      status: 'Finalizado',
+      githubLink: 'https://github.com/gabebonham/events-website',
+      link: 'https://gabebonham.github.io/events-website/',
+    },
+    {
+      id: '4',
+      name: 'Site Pessoal V1',
+      description: 'A primeira versão do meu web site pessoal.',
+      img: '/imgs/v1.png',
+      tech: [
+        'Next js',
+        'Vercel',
+        'Axios',
+        'HTML',
+        'CSS',
+        'Type Script',
+        'Shadcn',
+      ],
+      status: 'Finalizado',
+      githubLink: 'https://github.com/gabebonham/dev-web-site-front',
+      link: 'https://grote.com.br',
+    },
+    {
+      id: '5',
+      name: 'App de Chat',
+      description:
+        'Um treinamento pessoal. A ideia e simular um aplicativo similar ao Whatsapp.',
+      img: '/imgs/chat.png',
+      tech: [
+        'Next js',
+        'Vercel',
+        'Axios',
+        'HTML',
+        'CSS',
+        'Type Script',
+        'Shadcn',
+        'Java',
+        'Spring Boot',
+      ],
+      status: 'Em Andamento',
+      githubLink: 'https://github.com/gabebonham/chat-app',
+      link: 'https://chat-app-eight-virid.vercel.app/',
+    },
+    {
+      id: '6',
+      name: 'CRM',
+      description:
+        'Um aplicativo CRM que não foi dado continuidade, mas foi um dos meus primeiros projetos front-end.',
+      img: '/imgs/crm.png',
+      tech: ['Next js', 'Axios', 'HTML', 'CSS', 'Type Script', 'Shadcn'],
+      status: 'Cancelado',
+      githubLink: 'https://github.com/gabebonham/next-1',
+    },
+    {
+      id: '7',
+      name: 'Biscuit Bijux',
+      description: 'Um catalogo de bijuterias.',
+      img: luma,
+      tech: ['Next js', 'Axios', 'HTML', 'CSS', 'Type Script', 'Shadcn'],
+      status: 'Em Andamento',
+      githubLink: 'https://github.com/gabebonham/biscuit-bijux',
+      link: 'https://biscuit-bijux.vercel.app/',
+    },
+    {
+      id: '8',
+      name: 'Blog Site',
+      description:
+        'Um teste. O site foi feito em 3 horas como desafio para provar minhas skills para trabalhar em uma empresa.',
+      img: '/imgs/blog.png',
+      tech: ['Next js', 'Axios', 'HTML', 'CSS', 'Type Script'],
+      status: 'Finalizado',
+      githubLink: 'https://github.com/gabebonham/frontend',
+      link: 'https://frontend-chi-eight-29.vercel.app/',
+    },
+  ]
   return (
     <section className="pt-17 ">
       <div className="w-full flex items-center bg-lightgray/70 justify-around py-18  max-[400px]:flex-col-reverse ">
@@ -38,13 +219,19 @@ export default function HomePage() {
             </h4>
           </div>
           <div className="flex min-[400px]:items-center gap-x-6 max-[400px]:flex-col max-[400px]:gap-y-4">
-            <Button className="bg-mainblue text-white hover:bg-mainblue/60 px-10 rounded-sm cursor-pointer">
+            <Button
+              onClick={() => downloadCV()}
+              className="bg-mainblue text-white hover:bg-mainblue/60 px-10 rounded-sm cursor-pointer"
+            >
               <span className="flex items-center gap-x-2">
                 <ArrowDownToLine />
                 Download CV
               </span>
             </Button>
-            <Button className="bg-white border-gray-600 text-black hover:bg-mainblue/60 px-10 rounded-sm  cursor-pointer">
+            <Button
+              onClick={() => router.push('/projects')}
+              className="bg-white border-gray-600 text-black hover:bg-mainblue/60 px-10 rounded-sm  cursor-pointer"
+            >
               <span className="flex items-center gap-x-2">
                 <ExternalLink />
                 Explorar Projetos
@@ -54,7 +241,7 @@ export default function HomePage() {
           <div className="flex items-center gap-x-8 px-2 max-[400px]:justify-center max-[400px]:pt-4">
             <Link href={'https://github.com/gabebonham'}>
               <svg
-                className="size-6 hover:text-lightgray transition-all"
+                className="size-6 hover:text-mainblue transition-all"
                 xmlns="http://www.w3.org/2000/svg"
                 x="0px"
                 y="0px"
@@ -71,7 +258,7 @@ export default function HomePage() {
             </Link>
             <Link href={'https://www.linkedin.com/in/gabriel-grote-92357a220/'}>
               <svg
-                className="size-6 hover:text-lightgray transition-all"
+                className="size-6 hover:text-mainblue transition-all"
                 xmlns="http://www.w3.org/2000/svg"
                 x="0px"
                 y="0px"
@@ -103,41 +290,69 @@ export default function HomePage() {
             Algumas Tecnologias que Uso Diariamente
           </h4>
         </div>
-        <div className="flex items-center justify-center w-full gap-x-8 ">
-          <Card className="rounded-sm w-68 h-40 p-8 bg-white/20 border-maindark">
+        <div className="flex items-center justify-center w-full gap-x-8 max-[400px]:flex-col max-[400px]:gap-y-6">
+          <Card className="rounded-sm w-68 h-fit p-8 pr-2 bg-white/20 border-maindark">
             <div className="flex items-center gap-x-2">
               <Server className="size-9 text-orange-400" />
               <h1 className="text-2xl font-bold text-white">Backend</h1>
             </div>
-            <div>
-              <Badge>asdg</Badge>
+            <div className="space-x-2 w-full">
+              {backBadges.map((tech, index) => (
+                <Badge
+                  key={index}
+                  className="bg-orange-300 text-maindark rounded-lg text-xs"
+                >
+                  {tech}
+                </Badge>
+              ))}
             </div>
           </Card>
-          <Card className="rounded-sm w-68 h-40 p-8 bg-white/20 border-maindark">
+          <Card className="rounded-sm w-68 h-fit p-8 pr-2 bg-white/20 border-maindark">
             <div className="flex items-center gap-x-2">
               <Code className="size-9 text-mainblue" />
               <h1 className="text-2xl font-bold text-white">Frontend</h1>
             </div>
-            <div>
-              <Badge>asdg</Badge>
+            <div className="space-x-2 w-full">
+              {frontBadges.map((tech, index) => (
+                <Badge
+                  key={index}
+                  className="bg-mainblue/60 text-maindark rounded-lg text-xs"
+                >
+                  {tech}
+                </Badge>
+              ))}
             </div>
           </Card>
-          <Card className="rounded-sm w-68 h-40 p-8 bg-white/20 border-maindark">
+          <Card className="rounded-sm w-68 h-fit p-8 pr-2 bg-white/20 border-maindark">
             <div className="flex items-center gap-x-2">
               <Database className="size-9 text-gray-400" />
               <h1 className="text-2xl font-bold text-white">Database</h1>
             </div>
-            <div>
-              <Badge>asdg</Badge>
+            <div className="space-x-2 w-full">
+              {dbBadges.map((tech, index) => (
+                <Badge
+                  key={index}
+                  className="bg-gray-100 text-maindark rounded-lg text-xs"
+                >
+                  {tech}
+                </Badge>
+              ))}
             </div>
           </Card>
-          <Card className="rounded-sm w-68 h-40 p-8 bg-white/20 border-maindark">
+          <Card className="rounded-sm w-68 h-fit p-8 pr-2 bg-white/20 border-maindark">
             <div className="flex items-center gap-x-2">
               <Container className="size-9 text-yellow-500" />
               <h1 className="text-2xl font-bold text-white">DevOps</h1>
             </div>
-            <div>
-              <Badge>asdg</Badge>
+            <div className="space-x-2 w-full">
+              {devopsBadges.map((tech, index) => (
+                <Badge
+                  key={index}
+                  className="bg-yellow-300 text-maindark rounded-lg text-xs"
+                >
+                  {tech}
+                </Badge>
+              ))}
             </div>
           </Card>
         </div>
@@ -149,169 +364,106 @@ export default function HomePage() {
             Alguns dos projetos que eu tenho liberdade para compartilhar
           </h4>
         </div>
-        <div className="grid grid-cols-3 gap-x-20 px-16">
-          <Card className="p-0 bg-seconddark border-maindark">
-            <CardContent className="p-0">
-              <CardHeader className="p-0">
-                <Image
-                  alt="project-1"
-                  src={luma}
-                  className="w-full rounded-t-xl"
-                />
-              </CardHeader>
-              <CardTitle className="pt-4 px-8 text-2xl font-bold text-white">
-                asdfasdg
-              </CardTitle>
-              <CardDescription className="pt-2 pb-4 px-8 text-white/60">
-                asdgasgasdgsadgs
-              </CardDescription>
-              <CardFooter className="flex flex-col w-full gap-y-4 pb-6 px-8 box-border">
-                <div className="w-full">
-                  <Badge className="rounded-xl bg-transparent text-maindark bg-white border-1 border-maindark">
-                    asdfasd
-                  </Badge>
-                </div>
-                <div className=" flex gap-x-4  ">
-                  <Button className="w-fit px-10 cursor-pointer bg-white text-black/70 border-gray-500 border-1 rounded-sm hover:bg-gray-500/10 hover:text-black">
-                    Ver Código
-                  </Button>
-                  <Button className="w-fit px-10 cursor-pointer bg-mainblue text-white  rounded-sm hover:bg-mainblue/50 hover:text-black">
-                    Ver Projeto
-                  </Button>
-                </div>
-              </CardFooter>
-            </CardContent>
-          </Card>
-          <Card className="p-0 bg-seconddark border-maindark">
-            <CardContent className="p-0">
-              <CardHeader className="p-0">
-                <Image
-                  alt="project-1"
-                  src={luma}
-                  className="w-full rounded-t-xl"
-                />
-              </CardHeader>
-              <CardTitle className="pt-4 px-8 text-2xl font-bold text-white">
-                asdfasdg
-              </CardTitle>
-              <CardDescription className="pt-2 pb-4 px-8 text-white/60">
-                asdgasgasdgsadgs
-              </CardDescription>
-              <CardFooter className="flex flex-col w-full gap-y-4 pb-6 px-8 box-border">
-                <div className="w-full">
-                  <Badge className="rounded-xl bg-transparent text-maindark bg-white border-1 border-maindark">
-                    asdfasd
-                  </Badge>
-                </div>
-                <div className=" flex gap-x-4  ">
-                  <Button className="w-fit px-10 cursor-pointer bg-white text-black/70 border-gray-500 border-1 rounded-sm hover:bg-gray-500/10 hover:text-black">
-                    Ver Código
-                  </Button>
-                  <Button className="w-fit px-10 cursor-pointer bg-mainblue text-white  rounded-sm hover:bg-mainblue/50 hover:text-black">
-                    Ver Projeto
-                  </Button>
-                </div>
-              </CardFooter>
-            </CardContent>
-          </Card>
-          <Card className="p-0 bg-seconddark border-maindark">
-            <CardContent className="p-0">
-              <CardHeader className="p-0">
-                <Image
-                  alt="project-1"
-                  src={luma}
-                  className="w-full rounded-t-xl"
-                />
-              </CardHeader>
-              <CardTitle className="pt-4 px-8 text-2xl font-bold text-white">
-                asdfasdg
-              </CardTitle>
-              <CardDescription className="pt-2 pb-4 px-8 text-white/60">
-                asdgasgasdgsadgs
-              </CardDescription>
-              <CardFooter className="flex flex-col w-full gap-y-4 pb-6 px-8 box-border">
-                <div className="w-full">
-                  <Badge className="rounded-xl bg-transparent text-maindark bg-white border-1 border-maindark">
-                    asdfasd
-                  </Badge>
-                </div>
-                <div className=" flex gap-x-4  ">
-                  <Button className="w-fit px-10 cursor-pointer bg-white text-black/70 border-gray-500 border-1 rounded-sm hover:bg-gray-500/10 hover:text-black">
-                    Ver Código
-                  </Button>
-                  <Button className="w-fit px-10 cursor-pointer bg-mainblue text-white  rounded-sm hover:bg-mainblue/50 hover:text-black">
-                    Ver Projeto
-                  </Button>
-                </div>
-              </CardFooter>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-3 gap-x-20 px-16 max-[400px]:grid-cols-1 max-[400px]:px-6 max-[400px]:gap-y-6">
+          {projs &&
+            projs.length > 0 &&
+            projs.slice(0, 3).map((proj) => (
+              <Card key={proj.id} className="p-0 bg-seconddark border-maindark">
+                <CardContent className="p-0">
+                  <CardHeader className="p-0">
+                    <Image
+                      alt="project-1"
+                      src={proj.img}
+                      className="w-full rounded-t-xl"
+                      width={600}
+                      height={600}
+                    />
+                  </CardHeader>
+                  <CardTitle className="pt-4 px-8 text-2xl font-bold text-white">
+                    {proj.name}
+                  </CardTitle>
+                  <CardDescription className="pt-2 pb-4 px-8 text-white/60">
+                    {proj.description}
+                  </CardDescription>
+                  <CardFooter className="flex flex-col w-full gap-y-4 pb-6 px-8 box-border">
+                    <div className="w-full">
+                      {proj.tech.map((t) => (
+                        <Badge className="rounded-xl text-maindark bg-white border-1 border-maindark">
+                          {t}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className=" flex gap-x-4  max-[400px]:flex-col max-[400px]:w-full max-[400px]:gap-y-4">
+                      <Button
+                        onClick={() => router.push(proj?.githubLink as string)}
+                        className="w-fit px-10 cursor-pointer bg-white text-black/70 border-gray-500 border-1 rounded-sm hover:bg-gray-500/10 hover:text-black max-[400px]:w-full"
+                      >
+                        Ver Código
+                      </Button>
+                      <Button
+                        onClick={() => router.push(proj?.link as string)}
+                        className="w-fit px-10 cursor-pointer bg-mainblue text-white  rounded-sm hover:bg-mainblue/50 hover:text-black max-[400px]:w-full"
+                      >
+                        Explorar Projeto
+                      </Button>
+                    </div>
+                  </CardFooter>
+                </CardContent>
+              </Card>
+            ))}
         </div>
       </div>
       <div className="flex flex-col bg-seconddark/10 justify-center py-18 gap-y-12">
         <div className="w-full text-center space-y-2">
           <h1 className="text-6xl font-bold">Carreira Profissional</h1>
         </div>
-        <div className="px-20 space-y-8 ">
-          <Card className="rounded-sm bg-seconddark">
-            <CardContent>
-              <CardHeader>
-                <div className="flex justify-between ">
-                  <h2 className="text-3xl font-bold text-white">
-                    Panvel Farmacias
-                  </h2>
-                  <Badge className="text-xs font-normal h-fit text-white rounded-xl bg-transparent border-1 border-gray-500">
-                    2 Anos
-                  </Badge>
-                </div>
-                <h4 className="text-mainblue">Backend Spring Boot Developer</h4>
-                <p className="text-white/60">Eldorado Do Sul - RS</p>
-              </CardHeader>
-              <CardDescription className="px-6 text-white/70">
-                • Desenvolvimento e manutenção de sistemas críticos usando Java
-                Spring Boot <br />• Construção de integrações com sistemas
-                internos usando REST APIs
-                <br /> • Uso extenso de Banco de Dados (Oracle) e controle de
-                versionamento com Git <br />• Colaboração com times ágeis
-                (Scrum) e cultura DevOps
-              </CardDescription>
-            </CardContent>
-          </Card>
-          <Card className="rounded-sm bg-seconddark">
-            <CardContent>
-              <CardHeader>
-                <div className="flex justify-between ">
-                  <h2 className="text-3xl font-bold text-white">
-                    Desenvolvedor Fullstack Autonomo
-                  </h2>
-                  <Badge className="text-xs font-normal h-fit text-white rounded-xl bg-mainblue ">
-                    Atualmente
-                  </Badge>
-                </div>
-                <p className="text-white/60">Remoto</p>
-              </CardHeader>
-              <CardDescription className="px-6 text-white/70">
-                • Working as an independent developer, focusing on Next.js for
-                frontend and REST APIs for backend <br />• Custom projects for
-                clients in diverse areas, using Docker for deployment <br />•
-                Working with MongoDB/PostgreSQL as databases <br />•
-                Participating in all project phases: requirements gathering,
-                development, testing, and deployment
-              </CardDescription>
-            </CardContent>
-          </Card>
+        <div className="px-20 space-y-8 max-[400px]:px-6">
+          {historic &&
+            historic.length > 0 &&
+            historic.map((his) => (
+              <Card className="rounded-sm bg-seconddark ">
+                <CardContent className="max-[400px]:px-2">
+                  <CardHeader>
+                    <div className="flex justify-between ">
+                      <h2 className="text-3xl font-bold text-white">
+                        {his.place}
+                      </h2>
+                      {his.status != 'Atualmente' ? (
+                        <Badge className="text-xs font-normal h-fit text-white rounded-xl bg-transparent border-1 border-gray-500">
+                          {his.status}
+                        </Badge>
+                      ) : (
+                        <Badge className="text-xs font-normal h-fit text-white rounded-xl bg-mainblue ">
+                          Atualmente
+                        </Badge>
+                      )}
+                    </div>
+                    <h4 className="text-mainblue">{his.role}</h4>
+                    <p className="text-white/60">{his.location}</p>
+                  </CardHeader>
+                  <CardDescription className="px-6 text-white/70">
+                    {his.description.split('f1').map((des) => (
+                      <p className="py-1">• {des}</p>
+                    ))}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
         </div>
       </div>
-      <div className="bg-gradient-to-br w-full from-mainblue to-mainpurple text-center py-12">
+      <div className="bg-gradient-to-br w-full from-mainblue to-mainpurple text-center py-12 max-[400px]:px-4 ">
         <div className="w-full flex flex-col items-center justify-around h-56">
-          <h1 className="text-5xl text-white">
+          <h1 className="text-5xl text-white max-[400px]:text-4xl">
             Vamos Construir Algo <span className="underline">Juntos?</span>
           </h1>
-          <h4 className="text-3xl text-white">
+          <h4 className="text-3xl text-white max-[400px]:text-xl">
             Adoraria conversar contigo para botarmos no ar a tua ideia!
           </h4>
           <div>
-            <Button className="rounded-sm bg-lightgray text-lightgraytext cursor-pointer hover:text-white hover:bg-mainblue">
+            <Button
+              onClick={() => router.push('/contact')}
+              className="rounded-sm bg-lightgray text-lightgraytext cursor-pointer hover:text-white hover:bg-mainblue"
+            >
               Entre em Contato
             </Button>
           </div>

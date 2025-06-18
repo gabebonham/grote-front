@@ -3,9 +3,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 import localFont from 'next/font/local'
 const dosis = localFont({
-  src: '../public/fonts/static/Dosis-Medium.ttf',
+  src: '../public/fonts/static/Dosis-SemiBold.ttf',
   display: 'swap',
-  weight: '800',
+  weight: '900',
 })
 
 export const metadata: Metadata = {

@@ -6,15 +6,15 @@ import Link from 'next/link'
 
 export default function PublicFooter() {
   return (
-    <footer className="bg-maindark text-lightgray/50  w-full">
+    <footer className="bg-maindark text-lightgray/50 w-full max-[400px]:text-center">
       <div className="flex-col flex w-full pt-10 items-center">
-        <div className=" w-full flex ">
-          <div className="w-full  px-30 ">
+        <div className=" w-full flex max-[400px]:flex-col">
+          <div className="w-full px-30 max-[400px]:px-6">
             <h1 className="text-white text-4xl pb-4">Gabriel Grote</h1>
             <h4 className="text-xl pb-2">
               Desenvolvedor de Software, Web, Bot, Desktop, Jogos...{' '}
             </h4>
-            <div className="flex items-center gap-x-10">
+            <div className="flex items-center gap-x-10 max-[400px]:justify-center max-[400px]:pt-8">
               <Link
                 href={'https://github.com/gabebonham'}
                 className="flex gap-x-2 items-center hover:text-lightgray transition-all"
@@ -57,9 +57,9 @@ export default function PublicFooter() {
               </Link>
             </div>
           </div>
-          <div className="w-full">
+          <div className="w-full max-[400px]:pt-12">
             <h1 className="text-2xl text-white pb-4">Info Para Contato</h1>
-            <div className="space-y-1">
+            <div className="space-y-1 max-[400px]:flex max-[400px]:flex-col max-[400px]:items-center">
               <p className="flex gap-x-2 items-center hover:text-lightgray transition-all">
                 <MapPin className="size-5" />
                 Porto Alegre, RS - Brazil

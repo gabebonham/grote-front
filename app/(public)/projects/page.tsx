@@ -17,6 +17,7 @@ import { ExternalLink, Router } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 export default function ProjectsPage() {
   const router = useRouter()
+
   const projs = [
     {
       id: '1',
@@ -39,9 +40,9 @@ export default function ProjectsPage() {
     },
     {
       id: '2',
-      name: 'Site Pessoal V2',
-      description: 'A segunda versão do meu web site pessoal.',
-      img: '/imgs/v2.png',
+      name: 'EverHedge',
+      description: 'Site que disponibiliza radares para o mercado financeiro.',
+      img: '/imgs/everr.png',
       tech: [
         'Next js',
         'Vercel',
@@ -52,8 +53,7 @@ export default function ProjectsPage() {
         'Shadcn',
       ],
       status: 'Finalizado',
-      githubLink: 'https://github.com/gabebonham/grote-website-frontend',
-      link: 'https://grote-website-frontend.vercel.app/home',
+      link: 'https://app.everhedge.com.br/',
     },
     {
       id: '3',
@@ -67,9 +67,9 @@ export default function ProjectsPage() {
     },
     {
       id: '4',
-      name: 'Site Pessoal V1',
-      description: 'A primeira versão do meu web site pessoal.',
-      img: '/imgs/v1.png',
+      name: 'Site de Grupos',
+      description: 'Repositório de grupos.',
+      img: '/imgs/whats.png',
       tech: [
         'Next js',
         'Vercel',
@@ -79,12 +79,21 @@ export default function ProjectsPage() {
         'Type Script',
         'Shadcn',
       ],
-      status: 'Finalizado',
-      githubLink: 'https://github.com/gabebonham/dev-web-site-front',
-      link: 'https://grote.com.br',
+      status: 'Em Andamento',
     },
     {
       id: '5',
+      name: 'Blog Site',
+      description:
+        'Um teste. O site foi feito em 3 horas como desafio para provar minhas skills para trabalhar em uma empresa.',
+      img: '/imgs/blog.png',
+      tech: ['Next js', 'Axios', 'HTML', 'CSS', 'Type Script'],
+      status: 'Finalizado',
+      githubLink: 'https://github.com/gabebonham/frontend',
+      link: 'https://frontend-chi-eight-29.vercel.app/',
+    },
+    {
+      id: '6',
       name: 'App de Chat',
       description:
         'Um treinamento pessoal. A ideia e simular um aplicativo similar ao Whatsapp.',
@@ -105,7 +114,7 @@ export default function ProjectsPage() {
       link: 'https://chat-app-eight-virid.vercel.app/',
     },
     {
-      id: '6',
+      id: '7',
       name: 'CRM',
       description:
         'Um aplicativo CRM que não foi dado continuidade, mas foi um dos meus primeiros projetos front-end.',
@@ -115,7 +124,7 @@ export default function ProjectsPage() {
       githubLink: 'https://github.com/gabebonham/next-1',
     },
     {
-      id: '7',
+      id: '8',
       name: 'Biscuit Bijux',
       description: 'Um catalogo de bijuterias.',
       img: luma,
@@ -124,16 +133,42 @@ export default function ProjectsPage() {
       githubLink: 'https://github.com/gabebonham/biscuit-bijux',
       link: 'https://biscuit-bijux.vercel.app/',
     },
+
     {
-      id: '8',
-      name: 'Blog Site',
-      description:
-        'Um teste. O site foi feito em 3 horas como desafio para provar minhas skills para trabalhar em uma empresa.',
-      img: '/imgs/blog.png',
-      tech: ['Next js', 'Axios', 'HTML', 'CSS', 'Type Script'],
+      id: '9',
+      name: 'Site Pessoal V1',
+      description: 'A primeira versão do meu web site pessoal.',
+      img: '/imgs/v1.png',
+      tech: [
+        'Next js',
+        'Vercel',
+        'Axios',
+        'HTML',
+        'CSS',
+        'Type Script',
+        'Shadcn',
+      ],
       status: 'Finalizado',
-      githubLink: 'https://github.com/gabebonham/frontend',
-      link: 'https://frontend-chi-eight-29.vercel.app/',
+      githubLink: 'https://github.com/gabebonham/dev-web-site-front',
+      link: 'https://grote.com.br',
+    },
+    {
+      id: '10',
+      name: 'Site Pessoal V2',
+      description: 'A segunda versão do meu web site pessoal.',
+      img: '/imgs/v2.png',
+      tech: [
+        'Next js',
+        'Vercel',
+        'Axios',
+        'HTML',
+        'CSS',
+        'Type Script',
+        'Shadcn',
+      ],
+      status: 'Finalizado',
+      githubLink: 'https://github.com/gabebonham/grote-website-frontend',
+      link: 'https://grote-website-frontend.vercel.app/home',
     },
   ]
   return (

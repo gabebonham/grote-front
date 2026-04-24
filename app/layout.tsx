@@ -23,6 +23,401 @@ export default function RootLayout({
       <body className={`${dosis.className}`}>
         {children}
         
+        <script data-liveedit-widget data-project="9a71637c-58ee-4346-b446-0cb49667857b" dangerouslySetInnerHTML={{ __html: `
+const PROJECT_ID = "9a71637c-58ee-4346-b446-0cb49667857b";
+const API_ENDPOINT = "https://ai-editor-backend.vercel.app/api/chat";
+
+(function () {
+  const PROJECT_ID = "9a71637c-58ee-4346-b446-0cb49667857b";
+  const API_ENDPOINT = "https://ai-editor-backend.vercel.app/api/chat";
+
+  const conversation = [];
+  let pendingChange = null;
+  let pendingChangeMessageEl = null;
+
+  // Create host element
+  const host = document.createElement("div");
+  host.id = "chat-widget-host";
+  host.style.cssText =
+    "position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;align-items:flex-end;";
+  document.body.appendChild(host);
+
+  // Attach Shadow DOM
+  const shadow = host.attachShadow({ mode: "open" });
+
+  // Styles
+  const style = document.createElement("style");
+  style.textContent = \`
+    *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+
+    #bubble{
+      width:56px;height:56px;border-radius:50%;background:#111;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.25);
+      transition:transform .2s,box-shadow .2s;flex-shrink:0;
+    }
+    #bubble:hover{transform:scale(1.07);box-shadow:0 6px 20px rgba(0,0,0,.35);}
+    #bubble svg{width:26px;height:26px;fill:white;}
+
+    #panel{
+      width:360px;height:520px;background:#fff;border-radius:16px;
+      box-shadow:0 8px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;
+      margin-bottom:12px;overflow:hidden;
+      transform:translateY(20px) scale(.97);opacity:0;
+      transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .25s ease;
+      pointer-events:none;
+    }
+    #panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:all;}
+
+    #header{
+      background:#111;color:#fff;padding:16px 18px;display:flex;align-items:center;
+      justify-content:space-between;flex-shrink:0;
+    }
+    #header-title{font-size:15px;font-weight:600;letter-spacing:.01em;}
+    #close-btn{
+      background:none;border:none;cursor:pointer;color:#fff;padding:4px;
+      display:flex;align-items:center;justify-content:center;border-radius:6px;
+      transition:background .15s;
+    }
+    #close-btn:hover{background:rgba(255,255,255,.15);}
+    #close-btn svg{width:18px;height:18px;stroke:white;fill:none;}
+
+    #messages{
+      flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:10px;
+      scroll-behavior:smooth;
+    }
+    #messages::-webkit-scrollbar{width:4px;}
+    #messages::-webkit-scrollbar-track{background:transparent;}
+    #messages::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px;}
+
+    .msg-row{display:flex;flex-direction:column;}
+    .msg-row.user{align-items:flex-end;}
+    .msg-row.assistant{align-items:flex-start;}
+
+    .bubble-msg{
+      max-width:80%;padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.55;
+      word-break:break-word;
+    }
+    .user .bubble-msg{background:#111;color:#fff;border-bottom-right-radius:4px;}
+    .assistant .bubble-msg{background:#f0f0f0;color:#111;border-bottom-left-radius:4px;}
+
+    .action-btns{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+    .btn-confirm{
+      background:#111;color:#fff;border:none;border-radius:8px;padding:7px 13px;
+      font-size:12.5px;cursor:pointer;font-weight:500;transition:opacity .15s;
+    }
+    .btn-confirm:hover{opacity:.85;}
+    .btn-undo{
+      background:#f0f0f0;color:#444;border:none;border-radius:8px;padding:7px 13px;
+      font-size:12.5px;cursor:pointer;font-weight:500;transition:background .15s;
+    }
+    .btn-undo:hover{background:#e0e0e0;}
+
+    .typing-dots{display:flex;align-items:center;gap:4px;padding:4px 2px;}
+    .typing-dots span{
+      width:7px;height:7px;background:#aaa;border-radius:50%;display:inline-block;
+      animation:bounce .9s infinite ease-in-out;
+    }
+    .typing-dots span:nth-child(2){animation-delay:.15s;}
+    .typing-dots span:nth-child(3){animation-delay:.3s;}
+    @keyframes bounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+
+    #input-row{
+      display:flex;align-items:center;gap:8px;padding:12px 14px;
+      border-top:1px solid #eee;flex-shrink:0;
+    }
+    #msg-input{
+      flex:1;border:1px solid #ddd;border-radius:10px;padding:9px 13px;
+      font-size:13.5px;outline:none;resize:none;height:40px;line-height:1.4;
+      transition:border-color .15s;font-family:inherit;
+    }
+    #msg-input:focus{border-color:#111;}
+    #send-btn{
+      background:#111;color:#fff;border:none;border-radius:10px;padding:0 15px;
+      height:40px;cursor:pointer;font-size:13.5px;font-weight:600;
+      transition:opacity .15s;white-space:nowrap;flex-shrink:0;
+    }
+    #send-btn:hover{opacity:.85;}
+    #send-btn:disabled{opacity:.45;cursor:not-allowed;}
+  \`;
+  shadow.appendChild(style);
+
+  // Panel
+  const panel = document.createElement("div");
+  panel.id = "panel";
+
+  // Header
+  const header = document.createElement("div");
+  header.id = "header";
+  header.innerHTML = \`
+    <span id="header-title">Chat with us</span>
+    <button id="close-btn" aria-label="Close chat">
+      <svg viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  \`;
+  panel.appendChild(header);
+
+  // Messages
+  const messagesEl = document.createElement("div");
+  messagesEl.id = "messages";
+  panel.appendChild(messagesEl);
+
+  // Input row
+  const inputRow = document.createElement("div");
+  inputRow.id = "input-row";
+  inputRow.innerHTML = \`
+    <input id="msg-input" type="text" placeholder="Type a message\u2026" autocomplete="off"/>
+    <button id="send-btn">Send</button>
+  \`;
+  panel.appendChild(inputRow);
+  shadow.appendChild(panel);
+
+  // Bubble
+  const bubble = document.createElement("button");
+  bubble.id = "bubble";
+  bubble.setAttribute("aria-label", "Open chat");
+  bubble.innerHTML = \`
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+    </svg>
+  \`;
+  shadow.appendChild(bubble);
+
+  // Refs
+  const msgInput = shadow.getElementById("msg-input");
+  const sendBtn = shadow.getElementById("send-btn");
+  const closeBtn = shadow.getElementById("close-btn");
+
+  // Toggle panel
+  let isOpen = false;
+  function openPanel() {
+    isOpen = true;
+    panel.classList.add("open");
+    msgInput.focus();
+  }
+  function closePanel() {
+    isOpen = false;
+    panel.classList.remove("open");
+  }
+
+  bubble.addEventListener("click", () => (isOpen ? closePanel() : openPanel()));
+  closeBtn.addEventListener("click", closePanel);
+
+  // Markdown-like formatting
+  function formatText(text) {
+    // Escape HTML first
+    let html = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    // Bold
+    html = html.replace(/\\*\\*(.+?)\\*\\*/g, "<strong>$1</strong>");
+    // Bullet points: lines starting with - or *
+    html = html.replace(/^[\\-\\*]\\s+(.+)$/gm, "\u2022 $1");
+    // Newlines to <br>
+    html = html.replace(/\\n/g, "<br>");
+    return html;
+  }
+
+  // Append message bubble
+  function appendMessage(role, htmlContent) {
+    const row = document.createElement("div");
+    row.className = \`msg-row \${role}\`;
+    const bub = document.createElement("div");
+    bub.className = "bubble-msg";
+    bub.innerHTML = htmlContent;
+    row.appendChild(bub);
+    messagesEl.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  // Typing dots
+  function showTyping() {
+    const row = document.createElement("div");
+    row.className = "msg-row assistant";
+    row.id = "typing-indicator";
+    const bub = document.createElement("div");
+    bub.className = "bubble-msg";
+    bub.innerHTML = \`<div class="typing-dots"><span></span><span></span><span></span></div>\`;
+    row.appendChild(bub);
+    messagesEl.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  function removeTyping() {
+    const t = shadow.getElementById("typing-indicator");
+    if (t) t.remove();
+  }
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function setInputDisabled(val) {
+    msgInput.disabled = val;
+    sendBtn.disabled = val;
+  }
+
+  // Apply DOM operations to host page
+  function applyDomOperations(ops) {
+    if (!Array.isArray(ops)) return;
+    ops.forEach((op) => {
+      try {
+        const el = document.querySelector(op.selector);
+        if (!el) return;
+        switch (op.op) {
+          case "replace_content":
+            el.innerHTML = op.html;
+            break;
+          case "replace_attr":
+            el.setAttribute(op.attr, op.value);
+            break;
+          case "insert_after":
+            el.insertAdjacentHTML("afterend", op.html);
+            break;
+          case "insert_before":
+            el.insertAdjacentHTML("beforebegin", op.html);
+            break;
+          case "remove":
+            el.remove();
+            break;
+          case "add_class":
+            el.classList.add(...(Array.isArray(op.classes) ? op.classes : [op.classes]));
+            break;
+          case "remove_class":
+            el.classList.remove(...(Array.isArray(op.classes) ? op.classes : [op.classes]));
+            break;
+          case "replace_style":
+            Object.assign(el.style, op.styles);
+            break;
+        }
+      } catch (e) {
+        console.warn("DOM op failed:", e);
+      }
+    });
+  }
+
+  // Render confirmation buttons
+  function renderConfirmButtons(row, pc) {
+    const actionDiv = document.createElement("div");
+    actionDiv.className = "action-btns";
+
+    const confirmBtn = document.createElement("button");
+    confirmBtn.className = "btn-confirm";
+    confirmBtn.textContent = "\u2705 Create PR";
+
+    const undoBtn = document.createElement("button");
+    undoBtn.className = "btn-undo";
+    undoBtn.textContent = "\u21a9\ufe0f Undo";
+
+    actionDiv.appendChild(confirmBtn);
+    actionDiv.appendChild(undoBtn);
+    row.appendChild(actionDiv);
+
+    confirmBtn.addEventListener("click", async () => {
+      actionDiv.remove();
+      pendingChange = null;
+      pendingChangeMessageEl = null;
+      setInputDisabled(true);
+      const typingRow = showTyping();
+      try {
+        const res = await fetch(API_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            projectId: PROJECT_ID,
+            message: "confirm",
+            confirmChangeId: pc.changeId,
+          }),
+        });
+        const data = await res.json();
+        removeTyping();
+        if (data.domOperations) applyDomOperations(data.domOperations);
+        appendMessage("assistant", formatText(data.reply || "Done!"));
+        if (data.pendingChange) {
+          pendingChange = data.pendingChange;
+          const lastRow = messagesEl.lastElementChild;
+          renderConfirmButtons(lastRow, pendingChange);
+          pendingChangeMessageEl = lastRow;
+        }
+      } catch (e) {
+        removeTyping();
+        appendMessage(
+          "assistant",
+          "Sorry, something went wrong. Please try again."
+        );
+      } finally {
+        setInputDisabled(false);
+        scrollToBottom();
+      }
+    });
+
+    undoBtn.addEventListener("click", () => {
+      actionDiv.remove();
+      pendingChange = null;
+      pendingChangeMessageEl = null;
+      appendMessage("assistant", "Change reverted.");
+      location.reload();
+    });
+  }
+
+  // Send message
+  async function sendMessage(userText) {
+    userText = userText.trim();
+    if (!userText) return;
+
+    conversation.push({ role: "user", content: userText });
+    appendMessage("user", formatText(userText));
+    msgInput.value = "";
+    setInputDisabled(true);
+
+    const typingRow = showTyping();
+
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: PROJECT_ID, message: userText }),
+      });
+
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+
+      removeTyping();
+
+      // Apply DOM ops before showing reply
+      if (data.domOperations) applyDomOperations(data.domOperations);
+
+      const reply = data.reply || "";
+      conversation.push({ role: "assistant", content: reply });
+      const msgRow = appendMessage("assistant", formatText(reply));
+
+      if (data.pendingChange) {
+        pendingChange = data.pendingChange;
+        renderConfirmButtons(msgRow, pendingChange);
+        pendingChangeMessageEl = msgRow;
+      }
+    } catch (e) {
+      removeTyping();
+      appendMessage("assistant", "Sorry, something went wrong. Please try again.");
+    } finally {
+      setInputDisabled(false);
+      scrollToBottom();
+    }
+  }
+
+  sendBtn.addEventListener("click", () => sendMessage(msgInput.value));
+  msgInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(msgInput.value);
+    }
+  });
+})();
+` }} />
       </body>
     </html>
   )

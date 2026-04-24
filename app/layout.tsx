@@ -20,7 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${dosis.className}`}>{children}</body>
+      <body className={`${dosis.className}`}>
+        {children}
+        <script src="https://cdn.liveedit.com/widget.js" data-project="cd5d3f93-b57d-4658-9c3d-7553e9cc51ff" data-api="https://cdn.liveedit.com/api" async defer></script>
+      </body>
     </html>
   )
 }

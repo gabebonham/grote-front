@@ -25,377 +25,352 @@ export default function RootLayout({
         
         <script
           data-liveedit-widget
-          data-project="9a71637c-58ee-4346-b446-0cb49667857b"
+          data-project="c8dc046e-0d9e-404e-bd13-a1befdeb814b"
           dangerouslySetInnerHTML={{
             __html: `
-const PROJECT_ID = "9a71637c-58ee-4346-b446-0cb49667857b";
-const API_ENDPOINT = "https://ai-editor-backend.vercel.app/api/chat";
-
-(function () {
-  const PROJECT_ID = "9a71637c-58ee-4346-b446-0cb49667857b";
+(function() {
+  const PROJECT_ID = "c8dc046e-0d9e-404e-bd13-a1befdeb814b";
   const API_ENDPOINT = "https://ai-editor-backend.vercel.app/api/chat";
 
-  let conversation = [];
+  const conversation = [];
   let pendingChange = null;
-  let pendingChangeButtons = null;
+  let pendingChangeButtonsEl = null;
 
   // Create host element
-  const host = document.createElement("div");
-  host.id = "chat-widget-host";
-  host.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;align-items:flex-end;";
+  const host = document.createElement('div');
+  host.id = '__chat-widget-host__';
+  host.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;align-items:flex-end;';
   document.body.appendChild(host);
 
   // Attach Shadow DOM
-  const shadow = host.attachShadow({ mode: "open" });
+  const shadow = host.attachShadow({ mode: 'open' });
 
   // Styles
-  const style = document.createElement("style");
+  const style = document.createElement('style');
   style.textContent = \`
-    *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,sans-serif;}
-
-    #bubble{
+    *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+    .bubble-btn{
       width:56px;height:56px;border-radius:50%;background:#1a1a1a;border:none;cursor:pointer;
       display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);
       transition:transform 0.2s,box-shadow 0.2s;flex-shrink:0;
     }
-    #bubble:hover{transform:scale(1.07);box-shadow:0 6px 20px rgba(0,0,0,0.32);}
-    #bubble svg{width:26px;height:26px;fill:white;}
-
-    #panel{
+    .bubble-btn:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,0.32);}
+    .bubble-btn svg{width:26px;height:26px;fill:white;}
+    .panel{
       width:360px;height:520px;background:#fff;border-radius:16px;
       box-shadow:0 8px 40px rgba(0,0,0,0.18);display:flex;flex-direction:column;
-      margin-bottom:12px;overflow:hidden;
-      transform:translateY(30px) scale(0.97);opacity:0;pointer-events:none;
-      transition:transform 0.28s cubic-bezier(.4,0,.2,1),opacity 0.28s cubic-bezier(.4,0,.2,1);
+      overflow:hidden;margin-bottom:12px;
+      transform-origin:bottom right;
+      transition:transform 0.25s cubic-bezier(0.4,0,0.2,1),opacity 0.25s cubic-bezier(0.4,0,0.2,1);
     }
-    #panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:all;}
-
-    #header{
+    .panel.closed{transform:scale(0.85) translateY(20px);opacity:0;pointer-events:none;}
+    .panel.open{transform:scale(1) translateY(0);opacity:1;}
+    .header{
       background:#1a1a1a;color:#fff;padding:16px 18px;display:flex;
       align-items:center;justify-content:space-between;flex-shrink:0;
     }
-    #header-title{font-size:15px;font-weight:600;letter-spacing:0.01em;}
-    #close-btn{background:none;border:none;cursor:pointer;color:#fff;opacity:0.75;
-      display:flex;align-items:center;justify-content:center;padding:2px;border-radius:4px;
-      transition:opacity 0.15s;}
-    #close-btn:hover{opacity:1;}
-    #close-btn svg{width:20px;height:20px;fill:white;}
-
-    #messages{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:10px;}
-    #messages::-webkit-scrollbar{width:5px;}
-    #messages::-webkit-scrollbar-track{background:transparent;}
-    #messages::-webkit-scrollbar-thumb{background:#ddd;border-radius:10px;}
-
+    .header-title{font-size:15px;font-weight:600;letter-spacing:0.01em;}
+    .close-btn{background:none;border:none;cursor:pointer;color:#fff;display:flex;align-items:center;padding:2px;border-radius:4px;opacity:0.8;transition:opacity 0.15s;}
+    .close-btn:hover{opacity:1;}
+    .close-btn svg{width:20px;height:20px;fill:white;}
+    .messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+    .messages::-webkit-scrollbar{width:4px;}
+    .messages::-webkit-scrollbar-track{background:transparent;}
+    .messages::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px;}
     .msg-row{display:flex;flex-direction:column;}
     .msg-row.user{align-items:flex-end;}
     .msg-row.assistant{align-items:flex-start;}
-
-    .bubble-msg{
-      max-width:82%;padding:10px 13px;border-radius:14px;font-size:13.5px;
+    .bubble{
+      max-width:82%;padding:10px 14px;border-radius:14px;font-size:14px;
       line-height:1.55;word-break:break-word;
     }
-    .user .bubble-msg{background:#1a1a1a;color:#fff;border-bottom-right-radius:4px;}
-    .assistant .bubble-msg{background:#f0f0f0;color:#1a1a1a;border-bottom-left-radius:4px;}
-
-    .action-btns{display:flex;gap:8px;margin-top:7px;flex-wrap:wrap;}
-    .btn-confirm{
-      background:#1a1a1a;color:#fff;border:none;padding:7px 13px;border-radius:8px;
-      font-size:12.5px;cursor:pointer;font-weight:500;transition:opacity 0.15s;
+    .msg-row.user .bubble{background:#1a1a1a;color:#fff;border-bottom-right-radius:4px;}
+    .msg-row.assistant .bubble{background:#f0f0f0;color:#1a1a1a;border-bottom-left-radius:4px;}
+    .typing-dots{display:flex;align-items:center;gap:4px;padding:12px 14px;}
+    .typing-dots span{
+      width:7px;height:7px;border-radius:50%;background:#999;display:inline-block;
+      animation:bounce 1.2s infinite ease-in-out;
     }
-    .btn-confirm:hover{opacity:0.82;}
-    .btn-undo{
-      background:#f0f0f0;color:#555;border:1px solid #ddd;padding:7px 13px;border-radius:8px;
-      font-size:12.5px;cursor:pointer;font-weight:500;transition:background 0.15s;
-    }
-    .btn-undo:hover{background:#e4e4e4;}
-
-    .typing-dots{display:flex;align-items:center;gap:4px;padding:12px 14px;background:#f0f0f0;
-      border-radius:14px;border-bottom-left-radius:4px;width:fit-content;}
-    .typing-dots span{width:7px;height:7px;background:#999;border-radius:50%;display:inline-block;
-      animation:dot-bounce 1.2s infinite ease-in-out;}
-    .typing-dots span:nth-child(1){animation-delay:0s;}
     .typing-dots span:nth-child(2){animation-delay:0.2s;}
     .typing-dots span:nth-child(3){animation-delay:0.4s;}
-    @keyframes dot-bounce{
-      0%,60%,100%{transform:translateY(0);}
-      30%{transform:translateY(-6px);}
+    @keyframes bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}
+    .action-btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+    .action-btn-confirm{
+      background:#1a1a1a;color:#fff;border:none;border-radius:8px;
+      padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;
+      transition:opacity 0.15s;
     }
-
-    #input-row{
+    .action-btn-confirm:hover{opacity:0.85;}
+    .action-btn-undo{
+      background:#f0f0f0;color:#555;border:1px solid #ddd;border-radius:8px;
+      padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;
+      transition:background 0.15s;
+    }
+    .action-btn-undo:hover{background:#e4e4e4;}
+    .input-row{
       display:flex;align-items:center;gap:8px;padding:12px 14px;
       border-top:1px solid #ebebeb;flex-shrink:0;background:#fff;
     }
-    #user-input{
-      flex:1;border:1px solid #ddd;border-radius:10px;padding:9px 12px;font-size:13.5px;
-      outline:none;resize:none;line-height:1.4;max-height:100px;overflow-y:auto;
-      transition:border-color 0.15s;font-family:inherit;
+    .input-field{
+      flex:1;border:1px solid #ddd;border-radius:10px;padding:9px 13px;
+      font-size:14px;outline:none;resize:none;line-height:1.4;
+      max-height:100px;overflow-y:auto;transition:border-color 0.15s;
+      font-family:inherit;
     }
-    #user-input:focus{border-color:#1a1a1a;}
-    #send-btn{
+    .input-field:focus{border-color:#1a1a1a;}
+    .send-btn{
       background:#1a1a1a;color:#fff;border:none;border-radius:10px;
-      width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;
       flex-shrink:0;transition:opacity 0.15s;
     }
-    #send-btn:hover{opacity:0.82;}
-    #send-btn svg{width:18px;height:18px;fill:white;}
+    .send-btn:hover{opacity:0.85;}
+    .send-btn:disabled{opacity:0.45;cursor:not-allowed;}
   \`;
   shadow.appendChild(style);
 
   // Panel
-  const panel = document.createElement("div");
-  panel.id = "panel";
+  const panel = document.createElement('div');
+  panel.className = 'panel closed';
 
   // Header
-  const header = document.createElement("div");
-  header.id = "header";
+  const header = document.createElement('div');
+  header.className = 'header';
   header.innerHTML = \`
-    <span id="header-title">Chat with us</span>
-    <button id="close-btn" aria-label="Close chat">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-      </svg>
+    <span class="header-title">Chat with us</span>
+    <button class="close-btn" aria-label="Close chat">
+      <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
     </button>
   \`;
   panel.appendChild(header);
 
-  // Messages
-  const messages = document.createElement("div");
-  messages.id = "messages";
-  panel.appendChild(messages);
+  // Messages area
+  const messagesEl = document.createElement('div');
+  messagesEl.className = 'messages';
+  panel.appendChild(messagesEl);
 
   // Input row
-  const inputRow = document.createElement("div");
-  inputRow.id = "input-row";
-  inputRow.innerHTML = \`
-    <textarea id="user-input" rows="1" placeholder="Type a message\u2026" aria-label="Message input"></textarea>
-    <button id="send-btn" aria-label="Send message">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-      </svg>
-    </button>
-  \`;
+  const inputRow = document.createElement('div');
+  inputRow.className = 'input-row';
+
+  const inputField = document.createElement('textarea');
+  inputField.className = 'input-field';
+  inputField.placeholder = 'Type a message\u2026';
+  inputField.rows = 1;
+
+  const sendBtn = document.createElement('button');
+  sendBtn.className = 'send-btn';
+  sendBtn.textContent = 'Send';
+
+  inputRow.appendChild(inputField);
+  inputRow.appendChild(sendBtn);
   panel.appendChild(inputRow);
-  shadow.appendChild(panel);
 
   // Bubble button
-  const bubble = document.createElement("button");
-  bubble.id = "bubble";
-  bubble.setAttribute("aria-label", "Open chat");
-  bubble.innerHTML = \`
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-        stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    </svg>
-  \`;
-  shadow.appendChild(bubble);
+  const bubbleBtn = document.createElement('button');
+  bubbleBtn.className = 'bubble-btn';
+  bubbleBtn.setAttribute('aria-label', 'Open chat');
+  bubbleBtn.innerHTML = \`<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>\`;
 
-  // ── Helpers ──────────────────────────────────────────────
+  shadow.appendChild(panel);
+  shadow.appendChild(bubbleBtn);
+
+  // State
+  let isOpen = false;
+  let isLoading = false;
+
+  function togglePanel() {
+    isOpen = !isOpen;
+    if (isOpen) {
+      panel.classList.remove('closed');
+      panel.classList.add('open');
+      inputField.focus();
+    } else {
+      panel.classList.remove('open');
+      panel.classList.add('closed');
+    }
+  }
+
+  bubbleBtn.addEventListener('click', togglePanel);
+  header.querySelector('.close-btn').addEventListener('click', togglePanel);
+
+  // Auto-resize textarea
+  inputField.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+  });
+
+  inputField.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  });
+
+  sendBtn.addEventListener('click', handleSend);
 
   function formatText(text) {
-    let s = text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    s = s.replace(/\\*\\*(.+?)\\*\\*/g, "<strong>$1</strong>");
-    s = s.replace(/^[\\-\\*] (.+)/gm, "\u2022 $1");
-    s = s.replace(/\\n/g, "<br>");
-    return s;
+    let html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    html = html.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');
+    html = html.replace(/^[-*]\\s+(.+)$/gm, '\u2022 $1');
+    html = html.replace(/\\n/g, '<br>');
+    return html;
   }
 
-  function scrollToBottom() {
-    messages.scrollTop = messages.scrollHeight;
-  }
-
-  function addMessage(role, text) {
-    const row = document.createElement("div");
-    row.className = \"msg-row \" + role;
-    const bub = document.createElement("div");
-    bub.className = "bubble-msg";
-    bub.innerHTML = formatText(text);
-    row.appendChild(bub);
-    messages.appendChild(row);
+  function appendMessage(role, text) {
+    const row = document.createElement('div');
+    row.className = 'msg-row ' + role;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = formatText(text);
+    row.appendChild(bubble);
+    messagesEl.appendChild(row);
     scrollToBottom();
     return row;
   }
 
-  function showTyping() {
-    const row = document.createElement("div");
-    row.className = "msg-row assistant";
-    row.id = "typing-row";
-    row.innerHTML = \`<div class="typing-dots"><span></span><span></span><span></span></div>\`;
-    messages.appendChild(row);
+  function appendTypingDots() {
+    const row = document.createElement('div');
+    row.className = 'msg-row assistant';
+    const dotsBubble = document.createElement('div');
+    dotsBubble.className = 'bubble typing-dots';
+    dotsBubble.innerHTML = '<span></span><span></span><span></span>';
+    row.appendChild(dotsBubble);
+    messagesEl.appendChild(row);
     scrollToBottom();
+    return row;
   }
 
-  function removeTyping() {
-    const t = shadow.getElementById("typing-row");
-    if (t) t.remove();
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function setLoading(val) {
+    isLoading = val;
+    sendBtn.disabled = val;
+    inputField.disabled = val;
   }
 
   function applyDomOperations(ops) {
-    if (!ops || !ops.length) return;
-    ops.forEach(op => {
+    if (!ops || !Array.isArray(ops)) return;
+    ops.forEach(function(op) {
       try {
         const el = document.querySelector(op.selector);
         if (!el) return;
         switch (op.op) {
-          case "replace_content": el.innerHTML = op.html; break;
-          case "replace_attr": el.setAttribute(op.attr, op.value); break;
-          case "insert_after": el.insertAdjacentHTML("afterend", op.html); break;
-          case "insert_before": el.insertAdjacentHTML("beforebegin", op.html); break;
-          case "remove": el.remove(); break;
-          case "add_class": el.classList.add(...(Array.isArray(op.classes) ? op.classes : [op.classes])); break;
-          case "remove_class": el.classList.remove(...(Array.isArray(op.classes) ? op.classes : [op.classes])); break;
-          case "replace_style": Object.assign(el.style, op.styles); break;
+          case 'replace_content': el.innerHTML = op.html; break;
+          case 'replace_attr': el.setAttribute(op.attr, op.value); break;
+          case 'insert_after': el.insertAdjacentHTML('afterend', op.html); break;
+          case 'insert_before': el.insertAdjacentHTML('beforebegin', op.html); break;
+          case 'remove': el.remove(); break;
+          case 'add_class': el.classList.add(...(Array.isArray(op.classes) ? op.classes : [op.classes])); break;
+          case 'remove_class': el.classList.remove(...(Array.isArray(op.classes) ? op.classes : [op.classes])); break;
+          case 'replace_style': Object.assign(el.style, op.styles); break;
         }
-      } catch (e) {
-        console.warn("DOM operation failed:", op, e);
+      } catch(e) {
+        console.warn('DOM operation failed:', op, e);
       }
     });
   }
 
-  function removePendingButtons() {
-    if (pendingChangeButtons && pendingChangeButtons.parentNode) {
-      pendingChangeButtons.parentNode.removeChild(pendingChangeButtons);
-    }
-    pendingChangeButtons = null;
-  }
-
-  function renderPendingButtons(msgRow, changeObj) {
-    removePendingButtons();
-    pendingChange = changeObj;
-    const btnRow = document.createElement("div");
-    btnRow.className = "action-btns";
-    const confirmBtn = document.createElement("button");
-    confirmBtn.className = "btn-confirm";
-    confirmBtn.textContent = "\u2705 Create PR";
-    const undoBtn = document.createElement("button");
-    undoBtn.className = "btn-undo";
-    undoBtn.textContent = "\u21a9\ufe0f Undo";
-    btnRow.appendChild(confirmBtn);
-    btnRow.appendChild(undoBtn);
-    msgRow.appendChild(btnRow);
-    pendingChangeButtons = btnRow;
-
-    confirmBtn.addEventListener("click", async () => {
-      removePendingButtons();
+  function renderPendingChangeButtons(changeId, summary) {
+    removePendingChangeButtons();
+    const container = document.createElement('div');
+    container.className = 'msg-row assistant';
+    const btnsWrapper = document.createElement('div');
+    btnsWrapper.className = 'action-btns';
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'action-btn-confirm';
+    confirmBtn.textContent = '\u2705 Create PR';
+    const undoBtn = document.createElement('button');
+    undoBtn.className = 'action-btn-undo';
+    undoBtn.textContent = '\u21a9\ufe0f Undo';
+    confirmBtn.addEventListener('click', function() { handleConfirm(changeId); });
+    undoBtn.addEventListener('click', function() {
+      removePendingChangeButtons();
       pendingChange = null;
-      showTyping();
-      try {
-        const res = await fetch(API_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ projectId: PROJECT_ID, message: "confirm", confirmChangeId: changeObj.changeId }),
-        });
-        const data = await res.json();
-        removeTyping();
-        if (data.domOperations) applyDomOperations(data.domOperations);
-        addMessage("assistant", data.reply || "Done!");
-        if (data.pendingChange) {
-          const newRow = messages.lastElementChild;
-          renderPendingButtons(newRow, data.pendingChange);
-        }
-      } catch (e) {
-        removeTyping();
-        addMessage("assistant", "Sorry, something went wrong. Please try again.");
-      }
-    });
-
-    undoBtn.addEventListener("click", () => {
-      removePendingButtons();
-      pendingChange = null;
-      addMessage("assistant", "Change reverted.");
+      appendMessage('assistant', 'Change reverted.');
       location.reload();
     });
+    btnsWrapper.appendChild(confirmBtn);
+    btnsWrapper.appendChild(undoBtn);
+    container.appendChild(btnsWrapper);
+    messagesEl.appendChild(container);
+    scrollToBottom();
+    pendingChangeButtonsEl = container;
   }
 
-  async function sendMessage(userText) {
-    if (!userText.trim()) return;
-    removePendingButtons();
+  function removePendingChangeButtons() {
+    if (pendingChangeButtonsEl && pendingChangeButtonsEl.parentNode) {
+      pendingChangeButtonsEl.parentNode.removeChild(pendingChangeButtonsEl);
+      pendingChangeButtonsEl = null;
+    }
+  }
+
+  async function handleConfirm(changeId) {
+    removePendingChangeButtons();
     pendingChange = null;
-    conversation.push({ role: "user", content: userText });
-    addMessage("user", userText);
-    showTyping();
+    setLoading(true);
+    const dotsRow = appendTypingDots();
     try {
       const res = await fetch(API_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: PROJECT_ID, message: userText }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: PROJECT_ID, message: 'confirm', confirmChangeId: changeId })
       });
-      if (!res.ok) throw new Error("Network response was not ok");
       const data = await res.json();
+      dotsRow.remove();
       if (data.domOperations) applyDomOperations(data.domOperations);
-      removeTyping();
-      const reply = data.reply || "";
-      conversation.push({ role: "assistant", content: reply });
-      const msgRow = addMessage("assistant", reply);
+      const reply = data.reply || 'Done!';
+      conversation.push({ role: 'assistant', content: reply });
+      appendMessage('assistant', reply);
       if (data.pendingChange) {
-        renderPendingButtons(msgRow, data.pendingChange);
+        pendingChange = data.pendingChange;
+        renderPendingChangeButtons(data.pendingChange.changeId, data.pendingChange.summary);
       }
-    } catch (e) {
-      removeTyping();
-      addMessage("assistant", "Sorry, something went wrong. Please try again.");
+    } catch(e) {
+      dotsRow.remove();
+      appendMessage('assistant', 'Sorry, something went wrong. Please try again.');
     }
+    setLoading(false);
   }
 
-  // ── Event listeners ──────────────────────────────────────
-
-  let panelOpen = false;
-
-  bubble.addEventListener("click", () => {
-    panelOpen = !panelOpen;
-    panel.classList.toggle("open", panelOpen);
-    if (panelOpen) {
-      shadow.getElementById("user-input").focus();
+  async function handleSend() {
+    const text = inputField.value.trim();
+    if (!text || isLoading) return;
+    inputField.value = '';
+    inputField.style.height = 'auto';
+    removePendingChangeButtons();
+    pendingChange = null;
+    conversation.push({ role: 'user', content: text });
+    appendMessage('user', text);
+    setLoading(true);
+    const dotsRow = appendTypingDots();
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: PROJECT_ID, message: text, conversation: conversation })
+      });
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
+      dotsRow.remove();
+      if (data.domOperations) applyDomOperations(data.domOperations);
+      const reply = data.reply || '';
+      conversation.push({ role: 'assistant', content: reply });
+      appendMessage('assistant', reply);
+      if (data.pendingChange) {
+        pendingChange = data.pendingChange;
+        renderPendingChangeButtons(data.pendingChange.changeId, data.pendingChange.summary);
+      }
+    } catch(e) {
+      dotsRow.remove();
+      appendMessage('assistant', 'Sorry, something went wrong. Please try again.');
     }
-  });
-
-  shadow.getElementById("close-btn") && shadow.addEventListener("click", (e) => {
-    if (e.target && e.target.id === "close-btn" || (e.target && e.target.closest && e.target.closest("#close-btn"))) {
-      panelOpen = false;
-      panel.classList.remove("open");
-    }
-  });
-
-  // Use delegated event for close button since shadow DOM is dynamic
-  panel.addEventListener("click", (e) => {
-    const btn = e.target.closest("#close-btn");
-    if (btn) {
-      panelOpen = false;
-      panel.classList.remove("open");
-    }
-  });
-
-  inputRow.addEventListener("click", (e) => {
-    const btn = e.target.closest("#send-btn");
-    if (btn) {
-      const input = shadow.getElementById("user-input");
-      const val = input.value;
-      input.value = "";
-      input.style.height = "auto";
-      sendMessage(val);
-    }
-  });
-
-  shadow.addEventListener("keydown", (e) => {
-    if (e.target && e.target.id === "user-input" && e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      const input = e.target;
-      const val = input.value;
-      input.value = "";
-      input.style.height = "auto";
-      sendMessage(val);
-    }
-  });
-
-  // Auto-resize textarea
-  shadow.addEventListener("input", (e) => {
-    if (e.target && e.target.id === "user-input") {
-      e.target.style.height = "auto";
-      e.target.style.height = e.target.scrollHeight + "px";
-    }
-  });
-
+    setLoading(false);
+  }
 })();
 `
           }}

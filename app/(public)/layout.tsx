@@ -640,6 +640,316 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.` }} />
+      
+      <script dangerouslySetInnerHTML={{ __html: `const PROJECT_ID = "48cb8dd7-0c81-4727-8256-13acd5e976e7";
+const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
+
+(function () {
+  const host = document.createElement("div");
+  host.id = "ai-chat-widget-host";
+  host.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;align-items:flex-end;";
+  document.body.appendChild(host);
+
+  const shadow = host.attachShadow({ mode: "open" });
+
+  const style = document.createElement("style");
+  style.textContent = \`
+    *{box-sizing:border-box;margin:0;padding:0;}
+    .bubble{
+      width:56px;height:56px;border-radius:50%;background:#1a1a1a;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);
+      transition:transform 0.2s,box-shadow 0.2s;flex-shrink:0;
+    }
+    .bubble:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,0.35);}
+    .bubble svg{width:26px;height:26px;fill:white;}
+    .panel{
+      width:360px;height:520px;background:#fff;border-radius:16px;
+      box-shadow:0 8px 40px rgba(0,0,0,0.18);display:flex;flex-direction:column;
+      overflow:hidden;margin-bottom:12px;
+      transform-origin:bottom right;
+      animation:none;
+    }
+    .panel.open{animation:slideUp 0.25s cubic-bezier(0.22,1,0.36,1) forwards;}
+    .panel.close{animation:slideDown 0.2s ease-in forwards;}
+    @keyframes slideUp{
+      from{opacity:0;transform:scale(0.85) translateY(24px);}
+      to{opacity:1;transform:scale(1) translateY(0);}
+    }
+    @keyframes slideDown{
+      from{opacity:1;transform:scale(1) translateY(0);}
+      to{opacity:0;transform:scale(0.85) translateY(24px);}
+    }
+    .header{
+      background:#1a1a1a;color:#fff;padding:0 16px;height:56px;
+      display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+    }
+    .header-title{font-size:15px;font-weight:600;font-family:system-ui,sans-serif;letter-spacing:0.01em;}
+    .close-btn{
+      background:none;border:none;cursor:pointer;color:#fff;opacity:0.75;
+      display:flex;align-items:center;justify-content:center;padding:4px;border-radius:6px;
+      transition:opacity 0.15s;
+    }
+    .close-btn:hover{opacity:1;}
+    .close-btn svg{width:20px;height:20px;fill:white;}
+    .messages{
+      flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;
+      font-family:system-ui,sans-serif;font-size:14px;line-height:1.5;
+    }
+    .messages::-webkit-scrollbar{width:5px;}
+    .messages::-webkit-scrollbar-track{background:transparent;}
+    .messages::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px;}
+    .msg{max-width:82%;padding:10px 13px;border-radius:14px;word-break:break-word;}
+    .msg.user{
+      align-self:flex-end;background:#1a1a1a;color:#fff;border-bottom-right-radius:4px;
+    }
+    .msg.assistant{
+      align-self:flex-start;background:#f0f0f0;color:#1a1a1a;border-bottom-left-radius:4px;
+    }
+    .msg.error{
+      align-self:flex-start;background:#fff0f0;color:#c0392b;border-bottom-left-radius:4px;
+      border:1px solid #fcc;
+    }
+    .confirm-row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+    .confirm-btn{
+      padding:7px 13px;border-radius:8px;border:none;cursor:pointer;font-size:13px;
+      font-family:system-ui,sans-serif;font-weight:500;transition:opacity 0.15s;
+    }
+    .confirm-btn:hover{opacity:0.82;}
+    .confirm-btn.yes{background:#1a1a1a;color:#fff;}
+    .confirm-btn.undo{background:#e0e0e0;color:#1a1a1a;}
+    .typing{display:flex;align-items:center;gap:5px;padding:12px 14px;}
+    .dot{width:7px;height:7px;border-radius:50%;background:#aaa;animation:bounce 1.2s infinite ease-in-out;}
+    .dot:nth-child(2){animation-delay:0.2s;}
+    .dot:nth-child(3){animation-delay:0.4s;}
+    @keyframes bounce{
+      0%,80%,100%{transform:translateY(0);}
+      40%{transform:translateY(-7px);}
+    }
+    .input-row{
+      display:flex;align-items:center;gap:8px;padding:12px;border-top:1px solid #ebebeb;flex-shrink:0;
+    }
+    .input-field{
+      flex:1;border:1px solid #ddd;border-radius:10px;padding:9px 13px;font-size:14px;
+      font-family:system-ui,sans-serif;outline:none;resize:none;transition:border-color 0.15s;
+      line-height:1.45;max-height:120px;overflow-y:auto;background:#fafafa;
+    }
+    .input-field:focus{border-color:#1a1a1a;background:#fff;}
+    .send-btn{
+      width:38px;height:38px;border-radius:10px;background:#1a1a1a;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 0.15s;
+    }
+    .send-btn:hover{opacity:0.82;}
+    .send-btn svg{width:18px;height:18px;fill:white;}
+    .hidden{display:none!important;}
+  \`;
+  shadow.appendChild(style);
+
+  // Panel
+  const panel = document.createElement("div");
+  panel.className = "panel hidden";
+
+  // Header
+  const header = document.createElement("div");
+  header.className = "header";
+  const headerTitle = document.createElement("span");
+  headerTitle.className = "header-title";
+  headerTitle.textContent = "Chat with us";
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "close-btn";
+  closeBtn.setAttribute("aria-label", "Close chat");
+  closeBtn.innerHTML = \`<svg viewBox="0 0 24 24"><path d="M18.3 5.71a1 1 0 00-1.41 0L12 10.59 7.11 5.7A1 1 0 005.7 7.11L10.59 12 5.7 16.89a1 1 0 001.41 1.41L12 13.41l4.89 4.89a1 1 0 001.41-1.41L13.41 12l4.89-4.89a1 1 0 000-1.4z"/></svg>\`;
+  header.appendChild(headerTitle);
+  header.appendChild(closeBtn);
+
+  // Messages
+  const messagesEl = document.createElement("div");
+  messagesEl.className = "messages";
+
+  // Input row
+  const inputRow = document.createElement("div");
+  inputRow.className = "input-row";
+  const inputField = document.createElement("textarea");
+  inputField.className = "input-field";
+  inputField.placeholder = "Type a message…";
+  inputField.rows = 1;
+  const sendBtn = document.createElement("button");
+  sendBtn.className = "send-btn";
+  sendBtn.setAttribute("aria-label", "Send");
+  sendBtn.innerHTML = \`<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>\`;
+  inputRow.appendChild(inputField);
+  inputRow.appendChild(sendBtn);
+
+  panel.appendChild(header);
+  panel.appendChild(messagesEl);
+  panel.appendChild(inputRow);
+
+  // Bubble
+  const bubble = document.createElement("button");
+  bubble.className = "bubble";
+  bubble.setAttribute("aria-label", "Open chat");
+  bubble.innerHTML = \`<svg viewBox="0 0 24 24"><path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H6l-2 2V4h16v10z"/></svg>\`;
+
+  shadow.appendChild(panel);
+  shadow.appendChild(bubble);
+
+  // State
+  let isOpen = false;
+  let isWaiting = false;
+  const conversation = [];
+
+  function formatText(text) {
+    // Bold
+    let html = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    // Newlines
+    html = html.replace(/\n/g, "<br>");
+    return html;
+  }
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function addMessage(role, text) {
+    const div = document.createElement("div");
+    div.className = "msg " + role;
+    div.innerHTML = formatText(text);
+    messagesEl.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function addErrorMessage() {
+    const div = document.createElement("div");
+    div.className = "msg error";
+    div.textContent = "Sorry, something went wrong. Please try again.";
+    messagesEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function showTyping() {
+    const div = document.createElement("div");
+    div.className = "msg assistant typing-indicator";
+    div.innerHTML = \`<div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>\`;
+    messagesEl.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function applyDomOperations(ops) {
+    if (!ops || !Array.isArray(ops)) return;
+    ops.forEach(function (op) {
+      try {
+        const el = document.querySelector(op.selector);
+        if (!el) return;
+        if (op.op === "replace_content") {
+          el.innerHTML = op.html;
+        } else if (op.op === "replace_attr") {
+          el.setAttribute(op.attr, op.value);
+        } else if (op.op === "replace_style") {
+          Object.assign(el.style, op.styles);
+        } else if (op.op === "add_class") {
+          const cls = Array.isArray(op.classes) ? op.classes : op.classes.split(" ");
+          el.classList.add(...cls);
+        } else if (op.op === "remove_class") {
+          const cls = Array.isArray(op.classes) ? op.classes : op.classes.split(" ");
+          el.classList.remove(...cls);
+        } else if (op.op === "insert_after") {
+          el.insertAdjacentHTML("afterend", op.html);
+        } else if (op.op === "remove") {
+          el.remove();
+        }
+      } catch (e) {
+        console.warn("DOM op failed:", e);
+      }
+    });
+  }
+
+  function addConfirmButtons(pendingChange, replyDiv) {
+    const row = document.createElement("div");
+    row.className = "confirm-row";
+
+    const yesBtn = document.createElement("button");
+    yesBtn.className = "confirm-btn yes";
+    yesBtn.textContent = "✅ Create PR";
+
+    const undoBtn = document.createElement("button");
+    undoBtn.className = "confirm-btn undo";
+    undoBtn.textContent = "↩️ Undo";
+
+    row.appendChild(yesBtn);
+    row.appendChild(undoBtn);
+    replyDiv.appendChild(row);
+    scrollToBottom();
+
+    yesBtn.addEventListener("click", async function () {
+      yesBtn.disabled = true;
+      undoBtn.disabled = true;
+      yesBtn.style.opacity = "0.5";
+      undoBtn.style.opacity = "0.5";
+      row.remove();
+      await sendConfirm(pendingChange.confirmChangeId);
+    });
+
+    undoBtn.addEventListener("click", function () {
+      location.reload();
+    });
+  }
+
+  async function sendConfirm(confirmChangeId) {
+    if (isWaiting) return;
+    isWaiting = true;
+    const typingEl = showTyping();
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: PROJECT_ID, message: "confirm", confirmChangeId }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      typingEl.remove();
+      if (data.domOperations) applyDomOperations(data.domOperations);
+      const replyDiv = addMessage("assistant", data.reply || "");
+      if (data.pendingChange) addConfirmButtons(data.pendingChange, replyDiv);
+    } catch (e) {
+      typingEl.remove();
+      addErrorMessage();
+    } finally {
+      isWaiting = false;
+    }
+  }
+
+  async function sendMessage() {
+    if (isWaiting) return;
+    const text = inputField.value.trim();
+    if (!text) return;
+    inputField.value = "";
+    inputField.style.height = "auto";
+    conversation.push({ role: "user", content: text });
+    addMessage("user", text);
+    isWaiting = true;
+    const typingEl = showTyping();
+
+    const pageHtml = document.documentElement.outerHTML.slice(0, 200000);
+
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: PROJECT_ID, message: text, pageHtml }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      typingEl.remove();
+      if (data.domOperations) applyDomOperations(data.domOperations);
+      const replyDiv = addMessage("assistant", data.reply || "");
+      conversation.push({ role: "assistant", content: data.reply || "" });
+      if (data.pendingChange) addConfirmButtons(data.pendingChange, replyDiv);
+    } catch (e) {
+      typingEl.remove();
+      addErrorMessage();
+    } finally {
+      isWaiting = false;` }} />
       </main>
   )
 }

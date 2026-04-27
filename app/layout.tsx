@@ -337,7 +337,7 @@ const API_ENDPOINT = "https://ai-editor-backend.vercel.app/api/chat";
     appendMessage("user", text);
     conversation.push({ role: "user", content: text });
 
-    const pageHtml = document.documentElement.outerHTML.slice(0, 200000);
+    const pageHtml = document.documentElement.outerHTML.slice(0, 30000);
 
     setWaiting(true);
     showTyping();

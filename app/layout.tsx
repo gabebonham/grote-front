@@ -14,11 +14,11 @@ export const metadata: Metadata = {
 }
 
 const LIVEEDIT_WIDGET_JS = `const PROJECT_ID = "48cb8dd7-0c81-4727-8256-13acd5e976e7";
-const API_ENDPOINT = "https://ai-editor-backend.vercel.app/api/chat";
+const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
 
 (function () {
   const PROJECT_ID = "48cb8dd7-0c81-4727-8256-13acd5e976e7";
-  const API_ENDPOINT = "https://ai-editor-backend.vercel.app/api/chat";
+  const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
 
   const conversation = [];
   let pendingChange = null;

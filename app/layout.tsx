@@ -337,7 +337,29 @@ const API_ENDPOINT = "https://ai-editor-backend.vercel.app/api/chat";
     appendMessage("user", text);
     conversation.push({ role: "user", content: text });
 
-    const pageHtml = document.documentElement.outerHTML.slice(0, 30000);
+    // Compress the full page HTML using CompressionStream (supported in all modern browsers)
+    let pageHtmlCompressed = "";
+    try {
+      const fullHtml = document.documentElement.outerHTML;
+      if (typeof CompressionStream !== "undefined") {
+        const stream = new CompressionStream("gzip");
+        const writer = stream.writable.getWriter();
+        writer.write(new TextEncoder().encode(fullHtml));
+        writer.close();
+        const chunks = [];
+        const reader = stream.readable.getReader();
+        let done = false;
+        while (!done) {
+          const { value, done: d } = await reader.read();
+          if (value) chunks.push(value);
+          done = d;
+        }
+        const compressed = new Uint8Array(chunks.reduce((acc, c) => acc + c.length, 0));
+        let offset = 0;
+        for (const chunk of chunks) { compressed.set(chunk, offset); offset += chunk.length; }
+        pageHtmlCompressed = btoa(String.fromCharCode(...compressed));
+      }
+    } catch(e) { console.warn("[liveedit] compression failed", e); }
 
     setWaiting(true);
     showTyping();
@@ -346,7 +368,7 @@ const API_ENDPOINT = "https://ai-editor-backend.vercel.app/api/chat";
       const res = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: PROJECT_ID, message: text, pageHtml })
+        body: JSON.stringify({ projectId: PROJECT_ID, message: text, pageHtmlCompressed })
       });
 
       const data = await res.json();

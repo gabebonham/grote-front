@@ -734,6 +734,317 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
     userInput.style.height = Math.min(userInput.scrollHeight, 100) + "px";
   });
 })();` }} />
+      
+        <script dangerouslySetInnerHTML={{ __html: `const PROJECT_ID = "48cb8dd7-0c81-4727-8256-13acd5e976e7";
+const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
+
+(function () {
+  const host = document.createElement("div");
+  host.id = "ai-chat-widget-host";
+  host.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;align-items:flex-end;";
+  document.body.appendChild(host);
+
+  const shadow = host.attachShadow({ mode: "open" });
+
+  const style = document.createElement("style");
+  style.textContent = \`
+    *{box-sizing:border-box;margin:0;padding:0;}
+    .bubble{
+      width:56px;height:56px;border-radius:50%;background:#1a1a1a;
+      border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 16px rgba(0,0,0,0.25);transition:transform 0.2s,box-shadow 0.2s;
+      flex-shrink:0;
+    }
+    .bubble:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(0,0,0,0.32);}
+    .bubble svg{width:26px;height:26px;fill:white;}
+    .panel{
+      width:360px;height:520px;background:#fff;border-radius:16px;
+      box-shadow:0 8px 40px rgba(0,0,0,0.18);display:flex;flex-direction:column;
+      overflow:hidden;margin-bottom:12px;
+      transform-origin:bottom right;
+      transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1),opacity 0.22s ease;
+    }
+    .panel.hidden{transform:scale(0.85) translateY(24px);opacity:0;pointer-events:none;}
+    .panel.visible{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
+    .header{
+      background:#1a1a1a;color:#fff;padding:0 16px;height:54px;
+      display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+    }
+    .header-title{font-family:system-ui,sans-serif;font-size:15px;font-weight:600;letter-spacing:0.01em;}
+    .close-btn{
+      background:none;border:none;cursor:pointer;color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      width:32px;height:32px;border-radius:50%;transition:background 0.15s;
+    }
+    .close-btn:hover{background:rgba(255,255,255,0.15);}
+    .close-btn svg{width:18px;height:18px;fill:white;}
+    .messages{
+      flex:1;overflow-y:auto;padding:16px 14px;
+      display:flex;flex-direction:column;gap:10px;
+      font-family:system-ui,sans-serif;font-size:14px;line-height:1.5;
+    }
+    .messages::-webkit-scrollbar{width:4px;}
+    .messages::-webkit-scrollbar-track{background:transparent;}
+    .messages::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px;}
+    .msg{max-width:82%;padding:9px 13px;border-radius:14px;word-break:break-word;}
+    .msg.user{
+      align-self:flex-end;background:#1a1a1a;color:#fff;
+      border-bottom-right-radius:3px;
+    }
+    .msg.assistant{
+      align-self:flex-start;background:#f0f0f0;color:#1a1a1a;
+      border-bottom-left-radius:3px;
+    }
+    .msg.error{
+      align-self:flex-start;background:#fff0f0;color:#c0392b;
+      border:1px solid #fcd0d0;border-bottom-left-radius:3px;
+    }
+    .typing{align-self:flex-start;background:#f0f0f0;padding:10px 14px;border-radius:14px;border-bottom-left-radius:3px;}
+    .typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#999;margin:0 2px;animation:bounce 1.2s infinite;}
+    .typing span:nth-child(2){animation-delay:0.2s;}
+    .typing span:nth-child(3){animation-delay:0.4s;}
+    @keyframes bounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+    .confirm-row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+    .confirm-btn{
+      padding:7px 13px;border-radius:8px;border:none;cursor:pointer;
+      font-family:system-ui,sans-serif;font-size:13px;font-weight:600;
+      transition:opacity 0.15s,transform 0.1s;
+    }
+    .confirm-btn:hover{opacity:0.85;transform:translateY(-1px);}
+    .confirm-btn.pr{background:#1a1a1a;color:#fff;}
+    .confirm-btn.undo{background:#e5e5e5;color:#1a1a1a;}
+    .input-row{
+      display:flex;align-items:center;gap:8px;padding:10px 12px;
+      border-top:1px solid #ebebeb;flex-shrink:0;background:#fff;
+    }
+    .input-field{
+      flex:1;border:1.5px solid #e0e0e0;border-radius:10px;
+      padding:9px 12px;font-family:system-ui,sans-serif;font-size:14px;
+      outline:none;transition:border-color 0.18s;resize:none;
+      line-height:1.4;max-height:100px;overflow-y:auto;
+      background:#fafafa;color:#1a1a1a;
+    }
+    .input-field:focus{border-color:#1a1a1a;background:#fff;}
+    .send-btn{
+      width:38px;height:38px;border-radius:10px;background:#1a1a1a;
+      border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;transition:opacity 0.15s,transform 0.1s;
+    }
+    .send-btn:hover{opacity:0.82;transform:translateY(-1px);}
+    .send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+    .send-btn svg{width:18px;height:18px;fill:white;}
+  \`;
+  shadow.appendChild(style);
+
+  // Panel
+  const panel = document.createElement("div");
+  panel.className = "panel hidden";
+
+  // Header
+  const header = document.createElement("div");
+  header.className = "header";
+  header.innerHTML = \`
+    <span class="header-title">Chat with us</span>
+    <button class="close-btn" aria-label="Close chat">
+      <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
+    </button>
+  \`;
+  panel.appendChild(header);
+
+  // Messages
+  const messagesEl = document.createElement("div");
+  messagesEl.className = "messages";
+  panel.appendChild(messagesEl);
+
+  // Input row
+  const inputRow = document.createElement("div");
+  inputRow.className = "input-row";
+  const inputField = document.createElement("textarea");
+  inputField.className = "input-field";
+  inputField.placeholder = "Type a message…";
+  inputField.rows = 1;
+  const sendBtn = document.createElement("button");
+  sendBtn.className = "send-btn";
+  sendBtn.innerHTML = \`<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>\`;
+  inputRow.appendChild(inputField);
+  inputRow.appendChild(sendBtn);
+  panel.appendChild(inputRow);
+
+  // Bubble
+  const bubble = document.createElement("button");
+  bubble.className = "bubble";
+  bubble.setAttribute("aria-label", "Open chat");
+  bubble.innerHTML = \`<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>\`;
+
+  shadow.appendChild(panel);
+  shadow.appendChild(bubble);
+
+  // State
+  let isOpen = false;
+  let isWaiting = false;
+  const conversation = [];
+  let typingEl = null;
+  let currentPendingChangeId = null;
+  let confirmRowEl = null;
+
+  function togglePanel() {
+    isOpen = !isOpen;
+    if (isOpen) {
+      panel.classList.remove("hidden");
+      panel.classList.add("visible");
+      inputField.focus();
+    } else {
+      panel.classList.remove("visible");
+      panel.classList.add("hidden");
+    }
+  }
+
+  bubble.addEventListener("click", togglePanel);
+  header.querySelector(".close-btn").addEventListener("click", togglePanel);
+
+  function formatText(text) {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\n/g, "<br>");
+  }
+
+  function addMessage(role, text) {
+    const div = document.createElement("div");
+    div.className = "msg " + role;
+    div.innerHTML = formatText(text);
+    messagesEl.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function addErrorMessage(text) {
+    const div = document.createElement("div");
+    div.className = "msg error";
+    div.innerHTML = formatText(text);
+    messagesEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function showTyping() {
+    typingEl = document.createElement("div");
+    typingEl.className = "typing";
+    typingEl.innerHTML = "<span></span><span></span><span></span>";
+    messagesEl.appendChild(typingEl);
+    scrollToBottom();
+  }
+
+  function hideTyping() {
+    if (typingEl) { typingEl.remove(); typingEl = null; }
+  }
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function removeConfirmRow() {
+    if (confirmRowEl) { confirmRowEl.remove(); confirmRowEl = null; }
+    currentPendingChangeId = null;
+  }
+
+  function showConfirmRow(pendingChange) {
+    removeConfirmRow();
+    currentPendingChangeId = pendingChange.id || pendingChange.confirmChangeId || pendingChange;
+    confirmRowEl = document.createElement("div");
+    confirmRowEl.className = "confirm-row";
+
+    const prBtn = document.createElement("button");
+    prBtn.className = "confirm-btn pr";
+    prBtn.textContent = "✅ Create PR";
+
+    const undoBtn = document.createElement("button");
+    undoBtn.className = "confirm-btn undo";
+    undoBtn.textContent = "↩️ Undo";
+
+    confirmRowEl.appendChild(prBtn);
+    confirmRowEl.appendChild(undoBtn);
+    messagesEl.appendChild(confirmRowEl);
+    scrollToBottom();
+
+    prBtn.addEventListener("click", async () => {
+      removeConfirmRow();
+      await sendConfirm(currentPendingChangeId === null ? pendingChange.id || pendingChange.confirmChangeId || pendingChange : currentPendingChangeId);
+    });
+
+    undoBtn.addEventListener("click", () => {
+      removeConfirmRow();
+      location.reload();
+    });
+  }
+
+  function applyDomOperations(ops) {
+    if (!ops || !Array.isArray(ops)) return;
+    ops.forEach(op => {
+      try {
+        const el = document.querySelector(op.selector);
+        if (!el) return;
+        if (op.op === "replace_content") { el.innerHTML = op.html; }
+        else if (op.op === "replace_attr") { el.setAttribute(op.attr, op.value); }
+        else if (op.op === "replace_style") { Object.assign(el.style, op.styles); }
+        else if (op.op === "add_class") { el.classList.add(...(Array.isArray(op.classes) ? op.classes : [op.classes])); }
+        else if (op.op === "remove_class") { el.classList.remove(...(Array.isArray(op.classes) ? op.classes : [op.classes])); }
+        else if (op.op === "insert_after") { el.insertAdjacentHTML("afterend", op.html); }
+        else if (op.op === "remove") { el.remove(); }
+      } catch (e) { console.warn("DOM op error:", e); }
+    });
+  }
+
+  async function sendConfirm(confirmChangeId) {
+    setWaiting(true);
+    showTyping();
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: PROJECT_ID, message: "confirm", confirmChangeId })
+      });
+      const data = await res.json();
+      hideTyping();
+      if (data.domOperations) applyDomOperations(data.domOperations);
+      if (data.reply) { addMessage("assistant", data.reply); }
+      if (data.pendingChange) { showConfirmRow(data.pendingChange); }
+    } catch (e) {
+      hideTyping();
+      addErrorMessage("Sorry, something went wrong. Please try again.");
+    } finally {
+      setWaiting(false);
+    }
+  }
+
+  function setWaiting(val) {
+    isWaiting = val;
+    sendBtn.disabled = val;
+    inputField.disabled = val;
+  }
+
+  async function sendMessage() {
+    const message = inputField.value.trim();
+    if (!message || isWaiting) return;
+    removeConfirmRow();
+    inputField.value = "";
+    inputField.style.height = "auto";
+    addMessage("user", message);
+    conversation.push({ role: "user", content: message });
+    setWaiting(true);
+    showTyping();
+
+    var pageHtml = document.documentElement.outerHTML.slice(0, 200000);
+
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: PROJECT_ID, message, pageHtml })
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.` }} />
       </body>
     </html>
   )

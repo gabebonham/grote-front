@@ -50,7 +50,8 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
     #panel{
       width:360px;height:520px;background:#fff;border-radius:16px;
       box-shadow:0 8px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;
-      overflow:hidden;margin-bottom:12px;
+      overflow:hidden;
+      position:absolute;bottom:66px;right:0;
       transform-origin:bottom right;
       transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .25s;
     }

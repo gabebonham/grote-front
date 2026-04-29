@@ -25,12 +25,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={dosis.className}>
         {children}
-        <Script
-          src={WIDGET_URL}
-          strategy="afterInteractive"
-          data-liveedit-widget="true"
-          data-project="48cb8dd7-0c81-4727-8256-13acd5e976e7"
-        />
+        
+      
+        <script data-liveedit-widget data-project="48cb8dd7-0c81-4727-8256-13acd5e976e7" src="https://ai-editor-backend-vsqh.onrender.com/api/snippet/widget/48cb8dd7-0c81-4727-8256-13acd5e976e7" async></script>
       </body>
     </html>
   )

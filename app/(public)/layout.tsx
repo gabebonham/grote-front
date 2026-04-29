@@ -950,6 +950,300 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
       addErrorMessage();
     } finally {
       isWaiting = false;` }} />
+      
+      <script dangerouslySetInnerHTML={{ __html: `const PROJECT_ID = "48cb8dd7-0c81-4727-8256-13acd5e976e7";
+const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
+
+(function () {
+  const host = document.createElement("div");
+  host.id = "ai-chat-widget-host";
+  host.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;align-items:flex-end;";
+  document.body.appendChild(host);
+
+  const shadow = host.attachShadow({ mode: "open" });
+
+  const style = document.createElement("style");
+  style.textContent = \`
+    *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+    #bubble{width:56px;height:56px;border-radius:50%;background:#1a1a1a;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:transform 0.2s,box-shadow 0.2s;flex-shrink:0;}
+    #bubble:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,0.4);}
+    #bubble svg{width:26px;height:26px;fill:white;}
+    #panel{width:360px;height:520px;background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.18);display:flex;flex-direction:column;margin-bottom:12px;overflow:hidden;transform-origin:bottom right;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1),opacity 0.25s cubic-bezier(0.4,0,0.2,1);}
+    #panel.hidden{transform:scale(0.85) translateY(20px);opacity:0;pointer-events:none;}
+    #panel.visible{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
+    #header{background:#1a1a1a;color:#fff;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    #header-title{font-size:15px;font-weight:600;letter-spacing:0.01em;}
+    #close-btn{background:none;border:none;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;padding:4px;border-radius:6px;transition:background 0.15s;}
+    #close-btn:hover{background:rgba(255,255,255,0.15);}
+    #close-btn svg{width:18px;height:18px;fill:white;}
+    #messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+    #messages::-webkit-scrollbar{width:4px;}
+    #messages::-webkit-scrollbar-track{background:transparent;}
+    #messages::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px;}
+    .msg{max-width:80%;padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.5;word-break:break-word;}
+    .msg.user{align-self:flex-end;background:#1a1a1a;color:#fff;border-bottom-right-radius:4px;}
+    .msg.assistant{align-self:flex-start;background:#f0f0f0;color:#1a1a1a;border-bottom-left-radius:4px;}
+    .msg.error{align-self:flex-start;background:#fff0f0;color:#c0392b;border:1px solid #fcc;}
+    .msg b{font-weight:700;}
+    .confirm-row{display:flex;gap:8px;margin-top:4px;align-self:flex-start;}
+    .confirm-btn{padding:7px 13px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:opacity 0.15s;}
+    .confirm-btn:hover{opacity:0.85;}
+    .confirm-btn.pr{background:#1a1a1a;color:#fff;}
+    .confirm-btn.undo{background:#e0e0e0;color:#1a1a1a;}
+    #input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid #ebebeb;flex-shrink:0;background:#fff;}
+    #msg-input{flex:1;border:1px solid #ddd;border-radius:10px;padding:9px 12px;font-size:13.5px;outline:none;resize:none;height:40px;line-height:1.4;transition:border-color 0.15s;}
+    #msg-input:focus{border-color:#1a1a1a;}
+    #send-btn{width:40px;height:40px;border-radius:10px;background:#1a1a1a;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 0.15s;}
+    #send-btn:hover{opacity:0.82;}
+    #send-btn svg{width:18px;height:18px;fill:white;}
+    #send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+    .typing-dots{display:flex;align-items:center;gap:4px;padding:10px 13px;background:#f0f0f0;border-radius:14px;border-bottom-left-radius:4px;align-self:flex-start;}
+    .typing-dots span{width:7px;height:7px;border-radius:50%;background:#999;display:inline-block;animation:dot-bounce 1.2s infinite ease-in-out;}
+    .typing-dots span:nth-child(1){animation-delay:0s;}
+    .typing-dots span:nth-child(2){animation-delay:0.2s;}
+    .typing-dots span:nth-child(3){animation-delay:0.4s;}
+    @keyframes dot-bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}
+  \`;
+  shadow.appendChild(style);
+
+  const panel = document.createElement("div");
+  panel.id = "panel";
+  panel.className = "hidden";
+  panel.innerHTML = \`
+    <div id="header">
+      <span id="header-title">Chat with us</span>
+      <button id="close-btn" aria-label="Close chat">
+        <svg viewBox="0 0 24 24"><path d="M18.3 5.71a1 1 0 00-1.41 0L12 10.59 7.11 5.7A1 1 0 005.7 7.11L10.59 12 5.7 16.89a1 1 0 001.41 1.41L12 13.41l4.89 4.89a1 1 0 001.41-1.41L13.41 12l4.89-4.89a1 1 0 000-1.4z"/></svg>
+      </button>
+    </div>
+    <div id="messages"></div>
+    <div id="input-row">
+      <input id="msg-input" type="text" placeholder="Type a message…" autocomplete="off"/>
+      <button id="send-btn" aria-label="Send">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  \`;
+  shadow.appendChild(panel);
+
+  const bubble = document.createElement("button");
+  bubble.id = "bubble";
+  bubble.setAttribute("aria-label", "Open chat");
+  bubble.innerHTML = \`<svg viewBox="0 0 24 24"><path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>\`;
+  shadow.appendChild(bubble);
+
+  const messagesEl = shadow.getElementById("messages");
+  const msgInput = shadow.getElementById("msg-input");
+  const sendBtn = shadow.getElementById("send-btn");
+  const closeBtn = shadow.getElementById("close-btn");
+
+  let isOpen = false;
+  let isWaiting = false;
+  let conversation = [];
+
+  function togglePanel() {
+    isOpen = !isOpen;
+    if (isOpen) {
+      panel.classList.remove("hidden");
+      panel.classList.add("visible");
+      msgInput.focus();
+    } else {
+      panel.classList.remove("visible");
+      panel.classList.add("hidden");
+    }
+  }
+
+  bubble.addEventListener("click", togglePanel);
+  closeBtn.addEventListener("click", togglePanel);
+
+  msgInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  });
+
+  sendBtn.addEventListener("click", handleSend);
+
+  function formatText(text) {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+      .replace(/\n/g, "<br>");
+  }
+
+  function appendMessage(role, text) {
+    const div = document.createElement("div");
+    div.className = "msg " + role;
+    div.innerHTML = formatText(text);
+    messagesEl.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function appendError() {
+    const div = document.createElement("div");
+    div.className = "msg error";
+    div.textContent = "Sorry, something went wrong. Please try again.";
+    messagesEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  function showTyping() {
+    const div = document.createElement("div");
+    div.className = "typing-dots";
+    div.id = "typing-indicator";
+    div.innerHTML = "<span></span><span></span><span></span>";
+    messagesEl.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function removeTyping() {
+    const el = shadow.getElementById("typing-indicator");
+    if (el) el.remove();
+  }
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function setWaiting(val) {
+    isWaiting = val;
+    sendBtn.disabled = val;
+    msgInput.disabled = val;
+  }
+
+  function applyDomOperations(ops) {
+    if (!Array.isArray(ops)) return;
+    ops.forEach(function (op) {
+      try {
+        const el = document.querySelector(op.selector);
+        if (!el) return;
+        if (op.op === "replace_content") {
+          el.innerHTML = op.html;
+        } else if (op.op === "replace_attr") {
+          el.setAttribute(op.attr, op.value);
+        } else if (op.op === "replace_style") {
+          Object.assign(el.style, op.styles);
+        } else if (op.op === "add_class") {
+          const cls = Array.isArray(op.classes) ? op.classes : [op.classes];
+          el.classList.add(...cls);
+        } else if (op.op === "remove_class") {
+          const cls = Array.isArray(op.classes) ? op.classes : [op.classes];
+          el.classList.remove(...cls);
+        } else if (op.op === "insert_after") {
+          el.insertAdjacentHTML("afterend", op.html);
+        } else if (op.op === "remove") {
+          el.remove();
+        }
+      } catch (e) {
+        console.warn("DOM op failed:", op, e);
+      }
+    });
+  }
+
+  function showConfirmButtons(pendingChange) {
+    const row = document.createElement("div");
+    row.className = "confirm-row";
+
+    const prBtn = document.createElement("button");
+    prBtn.className = "confirm-btn pr";
+    prBtn.textContent = "✅ Create PR";
+
+    const undoBtn = document.createElement("button");
+    undoBtn.className = "confirm-btn undo";
+    undoBtn.textContent = "↩️ Undo";
+
+    row.appendChild(prBtn);
+    row.appendChild(undoBtn);
+    messagesEl.appendChild(row);
+    scrollToBottom();
+
+    prBtn.addEventListener("click", async function () {
+      row.remove();
+      setWaiting(true);
+      const typingEl = showTyping();
+      try {
+        const res = await fetch(API_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            projectId: PROJECT_ID,
+            message: "confirm",
+            confirmChangeId: pendingChange.id
+          })
+        });
+        const data = await res.json();
+        removeTyping();
+        if (data.domOperations) applyDomOperations(data.domOperations);
+        if (data.reply) {
+          conversation.push({ role: "assistant", content: data.reply });
+          appendMessage("assistant", data.reply);
+        }
+        if (data.pendingChange) showConfirmButtons(data.pendingChange);
+      } catch (e) {
+        removeTyping();
+        appendError();
+      } finally {
+        setWaiting(false);
+      }
+    });
+
+    undoBtn.addEventListener("click", function () {
+      location.reload();
+    });
+  }
+
+  async function handleSend() {
+    if (isWaiting) return;
+    const text = msgInput.value.trim();
+    if (!text) return;
+
+    msgInput.value = "";
+    conversation.push({ role: "user", content: text });
+    appendMessage("user", text);
+    setWaiting(true);
+    const typingEl = showTyping();
+
+    var pageHtml = document.documentElement.outerHTML.slice(0, 200000);
+
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: PROJECT_ID,
+          message: text,
+          pageHtml: pageHtml
+        })
+      });
+
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const data = await res.json();
+      removeTyping();
+
+      if (data.domOperations) applyDomOperations(data.domOperations);
+
+      if (data.reply) {
+        conversation.push({ role: "assistant", content: data.reply });
+        appendMessage("assistant", data.reply);
+      }
+
+      if (data.pendingChange) {
+        showConfirmButtons(data.pendingChange);
+      }
+    } catch (e) {
+      removeTyping();
+      appendError();
+    } finally {
+      setWaiting(false);
+    }
+  }
+})();` }} />
       </main>
   )
 }

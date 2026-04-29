@@ -23,6 +23,7 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
   const conversation = [];
   let pendingChange = null;
   let isWaiting = false;
+  let cachedHtmlHash = null; // Opt 3: cache hash to skip re-sending HTML
 
   // Create host element
   const host = document.createElement("div");
@@ -296,31 +297,6 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
     scrollToBottom();
   }
 
-  // Send confirmation request
-  async function sendConfirmation(changeId) {
-    setWaiting(true);
-    showTyping();
-    try {
-      const res = await fetch(API_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: PROJECT_ID, message: "confirm", confirmChangeId: changeId })
-      });
-      const data = await res.json();
-      hideTyping();
-      if (data.domOperations) applyDomOperations(data.domOperations);
-      appendMessage("assistant", data.reply || "Done!");
-      if (data.pendingChange) {
-        pendingChange = data.pendingChange;
-        renderConfirmation(pendingChange);
-      }
-    } catch (e) {
-      hideTyping();
-      appendMessage("assistant", "Sorry, something went wrong. Please try again.");
-    }
-    setWaiting(false);
-  }
-
   // Set waiting state
   function setWaiting(val) {
     isWaiting = val;
@@ -328,7 +304,92 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
     msgInput.disabled = val;
   }
 
-  // Send user message
+  // Compress HTML with gzip — returns base64 string
+  async function compressHtml(html) {
+    if (typeof CompressionStream === "undefined") return null;
+    try {
+      const stream = new CompressionStream("gzip");
+      const writer = stream.writable.getWriter();
+      writer.write(new TextEncoder().encode(html));
+      writer.close();
+      const chunks = [];
+      const reader = stream.readable.getReader();
+      let done = false;
+      while (!done) {
+        const { value, done: d } = await reader.read();
+        if (value) chunks.push(value);
+        done = d;
+      }
+      const arr = new Uint8Array(chunks.reduce((a, c) => a + c.length, 0));
+      let off = 0;
+      for (const ch of chunks) { arr.set(ch, off); off += ch.length; }
+      return btoa(String.fromCharCode(...arr));
+    } catch(e) { console.warn("[liveedit] compression failed", e); return null; }
+  }
+
+  // Parse SSE stream — calls onEvent(eventName, parsedData) for each event
+  async function consumeSSE(response, onEvent) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    let currentEvent = "message";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+
+      const lines = buf.split("\n");
+      buf = lines.pop(); // keep incomplete line
+
+      for (const line of lines) {
+        if (line.startsWith("event:")) {
+          currentEvent = line.slice(6).trim();
+        } else if (line.startsWith("data:")) {
+          try {
+            const data = JSON.parse(line.slice(5).trim());
+            onEvent(currentEvent, data);
+          } catch { /* skip malformed */ }
+          currentEvent = "message"; // reset
+        }
+      }
+    }
+  }
+
+  // Send confirmation via streaming endpoint
+  async function sendConfirmation(changeId) {
+    setWaiting(true);
+    showTyping();
+    try {
+      const res = await fetch(API_ENDPOINT + "/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: PROJECT_ID, message: "confirm", confirmChangeId: changeId })
+      });
+
+      await consumeSSE(res, (event, data) => {
+        if (event === "domOperations" && data.operations) {
+          applyDomOperations(data.operations);
+        } else if (event === "reply") {
+          hideTyping();
+          appendMessage("assistant", data.reply || "Done!");
+          if (data.pendingChange) {
+            pendingChange = data.pendingChange;
+            renderConfirmation(pendingChange);
+          }
+        } else if (event === "error") {
+          hideTyping();
+          appendMessage("assistant", "Error: " + (data.message || "Something went wrong."));
+        }
+      });
+    } catch (e) {
+      hideTyping();
+      appendMessage("assistant", "Sorry, something went wrong. Please try again.");
+    }
+    setWaiting(false);
+  }
+
+  // Send user message via streaming endpoint
   async function sendMessage() {
     const text = msgInput.value.trim();
     if (!text || isWaiting) return;
@@ -337,55 +398,86 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
     appendMessage("user", text);
     conversation.push({ role: "user", content: text });
 
-    // Compress the full page HTML using CompressionStream (supported in all modern browsers)
-    let pageHtmlCompressed = "";
-    try {
+    // Opt 3: only compress + send HTML if we don't have a valid cache hash
+    let body;
+    if (cachedHtmlHash) {
+      // Re-use server-side cached HTML — no compression needed
+      body = { projectId: PROJECT_ID, message: text, pageHtmlHash: cachedHtmlHash };
+    } else {
       const fullHtml = document.documentElement.outerHTML;
-      if (typeof CompressionStream !== "undefined") {
-        const stream = new CompressionStream("gzip");
-        const writer = stream.writable.getWriter();
-        writer.write(new TextEncoder().encode(fullHtml));
-        writer.close();
-        const chunks = [];
-        const reader = stream.readable.getReader();
-        let done = false;
-        while (!done) {
-          const { value, done: d } = await reader.read();
-          if (value) chunks.push(value);
-          done = d;
-        }
-        const compressed = new Uint8Array(chunks.reduce((acc, c) => acc + c.length, 0));
-        let offset = 0;
-        for (const chunk of chunks) { compressed.set(chunk, offset); offset += chunk.length; }
-        pageHtmlCompressed = btoa(String.fromCharCode(...compressed));
-      }
-    } catch(e) { console.warn("[liveedit] compression failed", e); }
+      const pageHtmlCompressed = await compressHtml(fullHtml);
+      body = { projectId: PROJECT_ID, message: text, pageHtmlCompressed };
+    }
 
     setWaiting(true);
-    showTyping();
+
+    // Show "thinking" status immediately
+    const statusRow = appendMessage("assistant", "⏳ Thinking…");
+    let streamReply = "";
+    let replyBubble = null;
 
     try {
-      const res = await fetch(API_ENDPOINT, {
+      const res = await fetch(API_ENDPOINT + "/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: PROJECT_ID, message: text, pageHtmlCompressed })
+        body: JSON.stringify(body)
       });
 
-      const data = await res.json();
-      hideTyping();
+      if (!res.ok || !res.body) throw new Error("HTTP " + res.status);
 
-      if (data.domOperations) applyDomOperations(data.domOperations);
-
-      const reply = data.reply || "No response.";
-      conversation.push({ role: "assistant", content: reply });
-      appendMessage("assistant", reply);
-
-      if (data.pendingChange) {
-        pendingChange = data.pendingChange;
-        renderConfirmation(pendingChange);
-      }
+      await consumeSSE(res, (event, data) => {
+        if (event === "htmlCached" && data.hash) {
+          // Opt 3: server cached the HTML — save hash for next message
+          cachedHtmlHash = data.hash;
+        } else if (event === "status") {
+          // Update status bubble in real time
+          if (statusRow) {
+            const bub = statusRow.querySelector(".bubble-msg");
+            if (bub) bub.innerHTML = renderMarkdown(data.message || "…");
+          }
+        } else if (event === "token") {
+          // Opt 2: streaming tokens — show reply as it arrives
+          streamReply += data.text || "";
+          if (!replyBubble) {
+            // Replace status row with the real reply bubble
+            statusRow.remove();
+            const row = document.createElement("div");
+            row.classList.add("msg-row", "assistant");
+            replyBubble = document.createElement("div");
+            replyBubble.classList.add("bubble-msg");
+            replyBubble.innerHTML = renderMarkdown(streamReply);
+            row.appendChild(replyBubble);
+            messages.appendChild(row);
+          } else {
+            replyBubble.innerHTML = renderMarkdown(streamReply);
+          }
+          scrollToBottom();
+        } else if (event === "domOperations" && data.operations) {
+          // Opt 2: apply DOM changes as soon as operations array is complete
+          statusRow.remove();
+          if (!replyBubble) appendMessage("assistant", "⚡ Applying changes…");
+          applyDomOperations(data.operations);
+        } else if (event === "reply") {
+          // Final reply + pendingChange
+          if (statusRow.parentNode) statusRow.remove();
+          if (!replyBubble) {
+            appendMessage("assistant", data.reply || "Done!");
+          } else {
+            replyBubble.innerHTML = renderMarkdown(data.reply || streamReply || "Done!");
+          }
+          conversation.push({ role: "assistant", content: data.reply || "" });
+          if (data.pendingChange) {
+            pendingChange = data.pendingChange;
+            renderConfirmation(pendingChange);
+          }
+          scrollToBottom();
+        } else if (event === "error") {
+          statusRow.remove();
+          appendMessage("assistant", "Error: " + (data.message || "Something went wrong."));
+        }
+      });
     } catch (e) {
-      hideTyping();
+      if (statusRow.parentNode) statusRow.remove();
       appendMessage("assistant", "Sorry, something went wrong. Please try again.");
     }
 

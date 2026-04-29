@@ -20,19 +20,26 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
   const PROJECT_ID = "48cb8dd7-0c81-4727-8256-13acd5e976e7";
   const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
 
+  // Guard: only init once (Next.js can re-execute scripts on navigation)
+  if (document.getElementById("chat-widget-host")) return;
+
   const conversation = [];
   let pendingChange = null;
   let isWaiting = false;
   let cachedHtmlHash = null; // Opt 3: cache hash to skip re-sending HTML
 
-  // Create host element
-  const host = document.createElement("div");
-  host.id = "chat-widget-host";
-  host.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;align-items:flex-end;";
-  document.body.appendChild(host);
+  function init() {
+    // Guard again inside init in case of race
+    if (document.getElementById("chat-widget-host")) return;
 
-  // Attach Shadow DOM
-  const shadow = host.attachShadow({ mode: "open" });
+    // Create host element
+    const host = document.createElement("div");
+    host.id = "chat-widget-host";
+    host.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;align-items:flex-end;";
+    document.body.appendChild(host);
+
+    // Attach Shadow DOM
+    const shadow = host.attachShadow({ mode: "open" });
 
   // Styles
   const style = document.createElement("style");
@@ -412,10 +419,33 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
 
     setWaiting(true);
 
-    // Show "thinking" status immediately
+    // Status row — helper to safely remove once
     const statusRow = appendMessage("assistant", "⏳ Thinking…");
-    let streamReply = "";
+    let statusRemoved = false;
+    function removeStatus() {
+      if (!statusRemoved && statusRow.parentNode) {
+        statusRow.remove();
+        statusRemoved = true;
+      }
+    }
+
+    // Reply bubble — created lazily on first token or domOperations
     let replyBubble = null;
+    let streamReply = "";
+    function ensureReplyBubble(initial) {
+      if (!replyBubble) {
+        removeStatus();
+        const row = document.createElement("div");
+        row.classList.add("msg-row", "assistant");
+        replyBubble = document.createElement("div");
+        replyBubble.classList.add("bubble-msg");
+        replyBubble.innerHTML = renderMarkdown(initial || "");
+        row.appendChild(replyBubble);
+        messages.appendChild(row);
+        scrollToBottom();
+      }
+      return replyBubble;
+    }
 
     try {
       const res = await fetch(API_ENDPOINT + "/stream", {
@@ -427,71 +457,78 @@ const API_ENDPOINT = "https://ai-editor-backend-vsqh.onrender.com/api/chat";
       if (!res.ok || !res.body) throw new Error("HTTP " + res.status);
 
       await consumeSSE(res, (event, data) => {
-        if (event === "htmlCached" && data.hash) {
-          // Opt 3: server cached the HTML — save hash for next message
-          cachedHtmlHash = data.hash;
-        } else if (event === "status") {
-          // Update status bubble in real time
-          if (statusRow) {
-            const bub = statusRow.querySelector(".bubble-msg");
-            if (bub) bub.innerHTML = renderMarkdown(data.message || "…");
+        try {
+          if (event === "htmlCached" && data.hash) {
+            cachedHtmlHash = data.hash;
+
+          } else if (event === "status") {
+            // Only update status if it hasn't been removed yet
+            if (!statusRemoved) {
+              const bub = statusRow.querySelector(".bubble-msg");
+              if (bub) bub.innerHTML = renderMarkdown(data.message || "…");
+            }
+
+          } else if (event === "token") {
+            // Streaming reply tokens
+            streamReply += data.text || "";
+            const bub = ensureReplyBubble(streamReply);
+            bub.innerHTML = renderMarkdown(streamReply);
+            scrollToBottom();
+
+          } else if (event === "domOperations" && data.operations && data.operations.length) {
+            // Apply DOM ops immediately — show feedback bubble
+            removeStatus();
+            if (!replyBubble) appendMessage("assistant", "⚡ Applying changes…");
+            applyDomOperations(data.operations);
+
+          } else if (event === "reply") {
+            // Final reply from server
+            removeStatus();
+            const finalText = data.reply || streamReply || "Done!";
+            if (!replyBubble) {
+              appendMessage("assistant", finalText);
+            } else {
+              replyBubble.innerHTML = renderMarkdown(finalText);
+            }
+            conversation.push({ role: "assistant", content: finalText });
+            if (data.pendingChange) {
+              pendingChange = data.pendingChange;
+              renderConfirmation(pendingChange);
+            }
+            scrollToBottom();
+
+          } else if (event === "error") {
+            removeStatus();
+            appendMessage("assistant", "Error: " + (data.message || "Something went wrong."));
           }
-        } else if (event === "token") {
-          // Opt 2: streaming tokens — show reply as it arrives
-          streamReply += data.text || "";
-          if (!replyBubble) {
-            // Replace status row with the real reply bubble
-            statusRow.remove();
-            const row = document.createElement("div");
-            row.classList.add("msg-row", "assistant");
-            replyBubble = document.createElement("div");
-            replyBubble.classList.add("bubble-msg");
-            replyBubble.innerHTML = renderMarkdown(streamReply);
-            row.appendChild(replyBubble);
-            messages.appendChild(row);
-          } else {
-            replyBubble.innerHTML = renderMarkdown(streamReply);
-          }
-          scrollToBottom();
-        } else if (event === "domOperations" && data.operations) {
-          // Opt 2: apply DOM changes as soon as operations array is complete
-          statusRow.remove();
-          if (!replyBubble) appendMessage("assistant", "⚡ Applying changes…");
-          applyDomOperations(data.operations);
-        } else if (event === "reply") {
-          // Final reply + pendingChange
-          if (statusRow.parentNode) statusRow.remove();
-          if (!replyBubble) {
-            appendMessage("assistant", data.reply || "Done!");
-          } else {
-            replyBubble.innerHTML = renderMarkdown(data.reply || streamReply || "Done!");
-          }
-          conversation.push({ role: "assistant", content: data.reply || "" });
-          if (data.pendingChange) {
-            pendingChange = data.pendingChange;
-            renderConfirmation(pendingChange);
-          }
-          scrollToBottom();
-        } else if (event === "error") {
-          statusRow.remove();
-          appendMessage("assistant", "Error: " + (data.message || "Something went wrong."));
+        } catch (evErr) {
+          console.warn("[liveedit] event handler error", event, evErr);
         }
       });
     } catch (e) {
-      if (statusRow.parentNode) statusRow.remove();
+      removeStatus();
       appendMessage("assistant", "Sorry, something went wrong. Please try again.");
     }
 
     setWaiting(false);
   }
 
-  sendBtn.addEventListener("click", sendMessage);
-  msgInput.addEventListener("keydown", e => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
+    sendBtn.addEventListener("click", sendMessage);
+    msgInput.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  } // end init()
+
+  // Run after DOM is ready — handles both fresh load and Next.js navigation
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    // Small delay so Next.js hydration doesn't remove our host
+    setTimeout(init, 0);
+  }
 
 })();`
 export default function RootLayout({

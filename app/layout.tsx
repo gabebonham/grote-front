@@ -29,6 +29,8 @@ export default function RootLayout({
       
         
       
+        
+      
         <script data-liveedit-widget data-project="48cb8dd7-0c81-4727-8256-13acd5e976e7" src="https://ai-editor-backend-vsqh.onrender.com/api/snippet/widget/48cb8dd7-0c81-4727-8256-13acd5e976e7" async></script>
       </body>
     </html>
